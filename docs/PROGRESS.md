@@ -1,7 +1,8 @@
 # rodf 진행 관리
 
 > 실행 추적 문서 — 설계·결정의 "왜"는 [DESIGN.md](DESIGN.md), 충실도 현황은
-> [scoreboard.md](scoreboard.md). **작업이 끝날 때마다 이 문서를 같은 커밋
+> [scoreboard.md](scoreboard.md), **단계별 여정을 풀어 쓴 기록은
+> [MILESTONES.md](MILESTONES.md)**. **작업이 끝날 때마다 이 문서를 같은 커밋
 > 흐름으로 갱신한다** (완료 항목은 날짜·커밋과 함께 완료 기록으로 내린다).
 
 ## 마일스톤 보드
