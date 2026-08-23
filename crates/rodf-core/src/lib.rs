@@ -9,7 +9,7 @@ mod styles;
 
 use std::path::Path;
 
-pub use styles::{PageGeometry, ResolvedTextStyle};
+pub use styles::{Align, PageGeometry, ResolvedTextStyle};
 
 /// 파싱은 됐지만 렌더 경로가 없어 건너뛴 구조 요소의 집계.
 #[derive(Debug, Clone, PartialEq, Eq)]

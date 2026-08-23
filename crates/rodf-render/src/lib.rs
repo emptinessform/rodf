@@ -195,7 +195,12 @@ fn map_paragraph(paragraph: &rodf_core::Paragraph) -> rlayout::Paragraph {
 
     rlayout::Paragraph {
         runs,
-        align: rlayout::Align::Start,
+        align: match style.align {
+            Some(rodf_core::Align::Center) => rlayout::Align::Center,
+            Some(rodf_core::Align::End) => rlayout::Align::End,
+            Some(rodf_core::Align::Justify) => rlayout::Align::Justify,
+            Some(rodf_core::Align::Start) | None => rlayout::Align::Start,
+        },
         space_before_pt: 0.0,
         space_after_pt: 0.0,
         hangul_word_wrap: None, // 기본값(true) = LO/ODF 관례

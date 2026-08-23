@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::Reader;
 
-use crate::styles::{ContentStyles, PageGeometry, RawStyle, RawTextProps, StyleSheet};
+use crate::styles::{Align, ContentStyles, PageGeometry, RawStyle, RawTextProps, StyleSheet};
 use crate::OdfError;
 
 /// content.xml 파싱 결과.
@@ -22,14 +22,37 @@ pub struct Content {
 }
 
 /// 아직 렌더 경로가 없는 구조 요소 — 서브트리째 건너뛰고 집계한다.
+/// (text:section은 투명 컨테이너라 여기 없다 — 내용은 정상 파싱된다.)
 fn unsupported_kind(local: &[u8]) -> Option<&'static str> {
     match local {
         b"table" => Some("table"),
         b"frame" => Some("frame"),
         b"list" => Some("list"),
         b"image" => Some("image"),
+        b"note" => Some("note"),                 // 각주/미주 — 본문에 섞이면 안 됨
+        b"bibliography" => Some("bibliography"), // 참고문헌 인덱스
+        b"table-of-content" => Some("table-of-content"),
+        b"alphabetical-index" => Some("alphabetical-index"),
+        b"custom-shape" => Some("custom-shape"),
+        b"object" => Some("object"),
+        b"control" => Some("control"),           // 양식 컨트롤
+        b"forms" => Some("forms"),
         _ => None,
     }
+}
+
+fn parse_align(value: &str) -> Option<Align> {
+    match value {
+        "start" | "left" => Some(Align::Start),
+        "end" | "right" => Some(Align::End),
+        "center" => Some(Align::Center),
+        "justify" => Some(Align::Justify),
+        _ => None,
+    }
+}
+
+fn read_para_align(e: &BytesStart) -> Option<Align> {
+    attr_local(e, "text-align").and_then(|v| parse_align(&v))
 }
 
 #[derive(Debug)]
@@ -113,6 +136,7 @@ fn read_text_props(e: &BytesStart) -> RawTextProps {
         font_size_asian_pt: attr_local(e, "font-size-asian").and_then(|v| parse_font_size(&v)),
         bold_asian: attr_local(e, "font-weight-asian").and_then(|v| parse_font_weight(&v)),
         italic_asian: attr_local(e, "font-style-asian").map(|v| v == "italic"),
+        align: None, // paragraph-properties에서 별도로 채워진다
     }
 }
 
@@ -169,6 +193,15 @@ pub fn parse_styles_xml(xml: &str) -> Result<StyleSheet, OdfError> {
                         scope = Scope::Default(RawTextProps::default());
                     }
                 }
+                b"paragraph-properties" => {
+                    if let Some(align) = read_para_align(&e) {
+                        match &mut scope {
+                            Scope::Named(_, style) => style.props.align = Some(align),
+                            Scope::Default(p) => p.align = Some(align),
+                            Scope::None => {}
+                        }
+                    }
+                }
                 _ => {}
             },
             Event::Empty(e) => match local_name(e.name().as_ref()) {
@@ -188,9 +221,26 @@ pub fn parse_styles_xml(xml: &str) -> Result<StyleSheet, OdfError> {
                 b"text-properties" => {
                     let props = read_text_props(&e);
                     match &mut scope {
-                        Scope::Named(_, style) => style.props = props,
-                        Scope::Default(p) => *p = props,
+                        Scope::Named(_, style) => {
+                            let align = style.props.align;
+                            style.props = props;
+                            style.props.align = style.props.align.or(align);
+                        }
+                        Scope::Default(p) => {
+                            let align = p.align;
+                            *p = props;
+                            p.align = p.align.or(align);
+                        }
                         Scope::None => {}
+                    }
+                }
+                b"paragraph-properties" => {
+                    if let Some(align) = read_para_align(&e) {
+                        match &mut scope {
+                            Scope::Named(_, style) => style.props.align = Some(align),
+                            Scope::Default(p) => p.align = Some(align),
+                            Scope::None => {}
+                        }
                     }
                 }
                 // 자식 없는 style:style — 속성 없는 스타일로 등록.
@@ -260,6 +310,13 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
                 } else {
                     match local_name(e.name().as_ref()) {
                         b"automatic-styles" => in_automatic = true,
+                        b"paragraph-properties" => {
+                            if let Some(align) = read_para_align(&e) {
+                                if let Some((_, style)) = &mut current_style {
+                                    style.props.align = Some(align);
+                                }
+                            }
+                        }
                         b"style" if in_automatic => {
                             let family = attr_local(&e, "family");
                             if family.as_deref() == Some("paragraph")
@@ -292,10 +349,26 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
                     let kind = unsupported_kind(kind_name).unwrap();
                     *content.unsupported.entry(kind.to_string()).or_default() += 1;
                 }
+                // 빈 문단(<text:p/>) — LO에서 한 행을 차지하므로 보존한다.
+                b"p" | b"h" if para.is_none() => {
+                    content.paragraphs.push(RawParagraph {
+                        style_name: attr_local(&e, "style-name"),
+                        text: String::new(),
+                    });
+                }
                 b"font-face" => read_font_face(&e, &mut content.automatic_styles.font_faces),
                 b"text-properties" => {
                     if let Some((_, style)) = &mut current_style {
+                        let align = style.props.align;
                         style.props = read_text_props(&e);
+                        style.props.align = style.props.align.or(align);
+                    }
+                }
+                b"paragraph-properties" => {
+                    if let Some(align) = read_para_align(&e) {
+                        if let Some((_, style)) = &mut current_style {
+                            style.props.align = Some(align);
+                        }
                     }
                 }
                 b"s" => {
@@ -310,6 +383,8 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
                     if let Some(p) = &mut para {
                         p.text.push('\t');
                     }
+                    // 탭 스톱은 아직 미해석 — 커버리지로 보고한다.
+                    *content.unsupported.entry("tab".to_string()).or_default() += 1;
                 }
                 b"line-break" => {
                     if let Some(p) = &mut para {

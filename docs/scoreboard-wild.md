@@ -1,25 +1,25 @@
 # rodf fidelity scoreboard
 
-Generated 2026-08-23 10:55 UTC · oracle v2: 양쪽 PDF를 동일 래스터라이저(pdftoppm)로 비교 · pass = blur2 SSIM ≥ 0.95
+Generated 2026-08-23 11:29 UTC · oracle v2: 양쪽 PDF를 동일 래스터라이저(pdftoppm)로 비교 · pass = blur2 SSIM ≥ 0.95
 
 `png blur2`는 참고 열: LO PNG 내보내기 vs rodf 자체 래스터 (힌팅/감마 차이 포함).
 
-**32/50 PASS** · 11 unsupported (coverage gaps)
+**33/50 PASS** · 17 unsupported (coverage gaps)
 
 | doc | status | raw SSIM | blur2 SSIM | png blur2 | coverage gaps |
 |---|---|---|---|---|---|
-| annotation-formatting | PASS | 0.9976 | 0.9975 | 0.9976 | list x1 |
-| BibliographyEntryField | FAIL | 0.5426 | 0.5147 | 0.5162 | — |
+| annotation-formatting | PASS | 0.9976 | 0.9975 | 0.9976 | forms x1, list x1 |
+| BibliographyEntryField | UNSUPPORTED | 0.7616 | 0.7552 | 0.7513 | bibliography x1 |
 | borders_ooo33 | UNSUPPORTED | 0.9222 | 0.9093 | 0.9095 | table x1 |
-| dateFormFormats | FAIL | 0.9537 | 0.9388 | 0.9608 | — |
+| dateFormFormats | UNSUPPORTED | 0.9537 | 0.9388 | 0.9608 | control x12, forms x1 |
 | empty-svg-family-name | UNSUPPORTED | 0.9247 | 0.9232 | 0.923 | list x1 |
-| fdo37606 | UNSUPPORTED | 0.7889 | 0.7646 | 0.759 | table x1 |
-| fdo53210 | FAIL | 0.9181 | 0.8903 | 0.8958 | — |
+| fdo37606 | UNSUPPORTED | 0.7883 | 0.7632 | 0.7575 | forms x1, table x1 |
+| fdo53210 | UNSUPPORTED | 0.9195 | 0.89 | 0.8955 | forms x1 |
 | fdo55814 | UNSUPPORTED | 0.6771 | 0.6554 | 0.6491 | table x1 |
 | fdo56272 | PASS | 0.9965 | 0.9969 | 0.997 | list x1 |
 | fdo60842 | PASS | 0.9902 | 0.9887 | 0.9889 | table x1 |
 | fdo68839 | PASS | 0.9886 | 0.9873 | 0.9874 | frame x4 |
-| fdo69862 | PASS | 0.9739 | 0.9714 | 0.9707 | table x1 |
+| fdo69862 | PASS | 0.9762 | 0.9737 | 0.973 | forms x1, note x1, table x1 |
 | fdo69979 | UNSUPPORTED | 0.8286 | 0.7784 | 0.7997 | table x1 |
 | fdo75872_aoo40 | PASS | 0.9987 | 0.9988 | 0.999 | — |
 | fdo75872_ooo33 | PASS | 0.9973 | 0.9965 | 0.9966 | — |
@@ -40,21 +40,21 @@ Generated 2026-08-23 10:55 UTC · oracle v2: 양쪽 PDF를 동일 래스터라�
 | feature_text_italic | PASS | 0.9808 | 0.9949 | 0.9702 | — |
 | hello | PASS | 0.9729 | 0.9927 | 0.9689 | — |
 | incorrectsum | PASS | 0.9545 | 0.9522 | 0.9535 | table x1 |
-| ooo32780-1 | FAIL | 0.3315 | 0.3532 | 0.355 | — |
-| ooo77837-1 | UNSUPPORTED | 0.5878 | 0.561 | 0.5696 | list x1 |
+| ooo32780-1 | UNSUPPORTED | 0.4964 | 0.5012 | 0.5029 | note x2 |
+| ooo77837-1 | UNSUPPORTED | 0.5878 | 0.561 | 0.5696 | forms x1, list x1 |
 | PageBackground | UNSUPPORTED | 0.3893 | 0.3927 | 0.4104 | frame x4 |
-| paste-first-para-direct-format | FAIL | 0.5376 | 0.5529 | 0.5493 | — |
-| space | FAIL | 0.6708 | 0.6787 | 0.6839 | — |
+| paste-first-para-direct-format | PASS | 0.9736 | 0.996 | 0.9871 | — |
+| space | UNSUPPORTED | 0.6708 | 0.6787 | 0.6839 | tab x49 |
 | spellmenu-redline | PASS | 0.911 | 0.9746 | 0.965 | — |
 | tdf100033_1 | PASS | 0.9955 | 0.9938 | 0.9945 | frame x3 |
 | tdf100033_2 | UNSUPPORTED | 0.8867 | 0.8558 | 0.859 | frame x3 |
-| tdf101729 | PASS | 0.9722 | 0.9661 | 0.9667 | table x1 |
+| tdf101729 | PASS | 0.9722 | 0.9661 | 0.9667 | forms x1, table x1 |
 | tdf103025 | PASS | 0.9814 | 0.9792 | 0.9796 | table x8 |
 | tdf107392 | UNSUPPORTED | 0.9435 | 0.9426 | 0.9442 | frame x3 |
-| tdf108482 | PASS | 0.9828 | 0.9762 | 0.9775 | table x1 |
+| tdf108482 | PASS | 0.9828 | 0.9762 | 0.9775 | forms x1, table x1 |
 | tdf109080_loext_ns | PASS | 0.9603 | 0.9616 | 0.9615 | — |
 | tdf109080_style_ns | PASS | 0.9603 | 0.9616 | 0.9615 | — |
 | tdf109228 | PASS | 0.9915 | 0.9903 | 0.9903 | frame x1 |
-| tdf113289 | PASS | 0.9883 | 0.9847 | 0.9849 | — |
-| Word2010AsCharShape | FAIL | 0.605 | 0.6165 | 0.6233 | — |
-| ZoneMacroTest | UNSUPPORTED | 0.7281 | 0.6903 | 0.6925 | table x1 |
+| tdf113289 | PASS | 0.9907 | 0.9862 | 0.9859 | note x1 |
+| Word2010AsCharShape | UNSUPPORTED | 0.605 | 0.6165 | 0.6233 | custom-shape x1 |
+| ZoneMacroTest | UNSUPPORTED | 0.7734 | 0.7682 | 0.7712 | forms x1, tab x2, table x1 |

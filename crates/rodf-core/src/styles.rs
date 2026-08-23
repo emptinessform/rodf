@@ -2,6 +2,15 @@
 
 use std::collections::HashMap;
 
+/// 문단 정렬 (fo:text-align).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum Align {
+    Start,
+    Center,
+    End,
+    Justify,
+}
+
 /// style:text-properties에서 읽은 원시 속성 (미해석, Option = 미지정).
 #[derive(Debug, Clone, Default)]
 pub struct RawTextProps {
@@ -15,6 +24,8 @@ pub struct RawTextProps {
     pub font_size_asian_pt: Option<f64>,
     pub bold_asian: Option<bool>,
     pub italic_asian: Option<bool>,
+    /// 문단 속성이지만 같은 상속 체인을 타므로 함께 나른다.
+    pub align: Option<Align>,
 }
 
 impl RawTextProps {
@@ -36,6 +47,7 @@ impl RawTextProps {
             font_size_asian_pt: other.font_size_asian_pt.or(self.font_size_asian_pt),
             bold_asian: other.bold_asian.or(self.bold_asian),
             italic_asian: other.italic_asian.or(self.italic_asian),
+            align: other.align.or(self.align),
         }
     }
 }
@@ -86,6 +98,8 @@ pub struct ResolvedTextStyle {
     pub font_size_asian_pt: Option<f64>,
     pub bold_asian: bool,
     pub italic_asian: bool,
+    /// 문단 정렬 (미지정 = None, 렌더러 기본은 Start).
+    pub align: Option<Align>,
 }
 
 /// 문단 style-name → 해석된 스타일. automatic(content.xml) 우선,
@@ -159,6 +173,7 @@ impl StyleResolver {
             font_size_asian_pt: props.font_size_asian_pt,
             bold_asian: props.bold_asian.unwrap_or(false),
             italic_asian: props.italic_asian.unwrap_or(false),
+            align: props.align,
         }
     }
 }

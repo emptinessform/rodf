@@ -118,3 +118,65 @@ fn opens_text_template_mimetype() {
     .expect("text-template should open");
     let _ = doc.paragraphs();
 }
+
+mod paragraph_align {
+    use rodf_core::{Align, Document};
+
+    /// fo:text-align이 automatic style 체인으로 해석돼야 한다.
+    #[test]
+    fn center_alignment_is_parsed() {
+        let doc = Document::open(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../corpus-wild/paste-first-para-direct-format.odt"
+        ))
+        .expect("open");
+        assert_eq!(doc.paragraphs()[0].style().align, Some(Align::Center));
+        assert_eq!(doc.paragraphs()[1].style().align, Some(Align::Center));
+    }
+
+    /// 정렬 미지정 문서는 None (렌더러 기본 = Start).
+    #[test]
+    fn unspecified_alignment_is_none() {
+        let doc = Document::open(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/fixtures/hello.odt"
+        ))
+        .unwrap();
+        assert_eq!(doc.paragraphs()[0].style().align, None);
+    }
+}
+
+mod coverage_wild {
+    use rodf_core::Document;
+
+    fn kinds(path: &str) -> Vec<String> {
+        let doc = Document::open(path).expect("open");
+        doc.coverage_notes().iter().map(|n| n.element.clone()).collect()
+    }
+
+    /// 각주(text:note)는 본문에 섞이지 말고 스킵+집계돼야 한다.
+    #[test]
+    fn footnotes_are_reported_not_flattened() {
+        let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../../corpus-wild");
+        let k = kinds(&format!("{root}/ooo32780-1.odt"));
+        assert!(k.contains(&"note".to_string()), "{k:?}");
+    }
+
+    /// 탭·양식·도형·인덱스류도 커버리지로 보고된다.
+    #[test]
+    fn tabs_forms_shapes_and_indexes_are_reported() {
+        let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../../corpus-wild");
+        assert!(kinds(&format!("{root}/space.odt")).contains(&"tab".to_string()));
+        assert!(kinds(&format!("{root}/dateFormFormats.odt")).contains(&"control".to_string()));
+        assert!(kinds(&format!("{root}/Word2010AsCharShape.odt")).contains(&"custom-shape".to_string()));
+        assert!(kinds(&format!("{root}/BibliographyEntryField.odt")).contains(&"bibliography".to_string()));
+    }
+
+    /// text:section은 투명 컨테이너 — 내용 문단은 살아 있어야 한다.
+    #[test]
+    fn sections_are_transparent() {
+        let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../../corpus-wild");
+        let doc = Document::open(&format!("{root}/ooo32780-1.odt")).unwrap();
+        assert!(doc.paragraphs().len() >= 20, "sections must not swallow paragraphs: {}", doc.paragraphs().len());
+    }
+}

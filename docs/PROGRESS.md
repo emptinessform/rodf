@@ -28,6 +28,13 @@
 
 ### 2026-08-23
 
+- ✅ **와일드 FAIL 7건 전부 해소 — 33 PASS / 17 UNSUPPORTED / 0 FAIL / 0 CRASH**
+  진단: 요소 히스토그램으로 7건 분류. 수정 3건: ① **문단 정렬**(fo:text-align
+  파싱→rlayout Center/End/Justify — paste 문서 0.55의 정체) ② **빈 문단 보존**
+  (<text:p/> Empty 폼이 통째로 사라져 행이 붕괴하던 결함) ③ **커버리지 확장**
+  (note 스킵+집계로 각주가 본문에 섞이던 것 차단, bibliography/index류/
+  custom-shape/object/control/forms/tab 보고, section은 투명 컨테이너).
+  나머지 4건은 UNSUPPORTED로 정확 분류. 테스트 35개.
 - ✅ **와일드 ODT 코퍼스 (M1.5 완결)** — LO core odfimport 테스트 ODT
   (MPL-2.0, libreoffice-26.2.1.2 태그 고정) 50개 수집기(fetch_corpus.py) +
   출처 대장(CORPUS-PROVENANCE.md, 파일별 sha256). 선행 구현: rodf-core

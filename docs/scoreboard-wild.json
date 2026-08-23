@@ -1,11 +1,11 @@
 {
-  "generated": "2026-08-23 10:55 UTC",
+  "generated": "2026-08-23 11:29 UTC",
   "threshold": 0.95,
   "results": [
     {
       "doc": "annotation-formatting",
       "losses": 0,
-      "coverage": "list x1",
+      "coverage": "forms x1, list x1",
       "raw": 0.9976,
       "blur2": 0.9975,
       "png_blur2": 0.9976,
@@ -14,10 +14,11 @@
     {
       "doc": "BibliographyEntryField",
       "losses": 0,
-      "raw": 0.5426,
-      "blur2": 0.5147,
-      "png_blur2": 0.5162,
-      "status": "FAIL"
+      "coverage": "bibliography x1",
+      "raw": 0.7616,
+      "blur2": 0.7552,
+      "png_blur2": 0.7513,
+      "status": "UNSUPPORTED"
     },
     {
       "doc": "borders_ooo33",
@@ -31,10 +32,11 @@
     {
       "doc": "dateFormFormats",
       "losses": 0,
+      "coverage": "control x12, forms x1",
       "raw": 0.9537,
       "blur2": 0.9388,
       "png_blur2": 0.9608,
-      "status": "FAIL"
+      "status": "UNSUPPORTED"
     },
     {
       "doc": "empty-svg-family-name",
@@ -48,19 +50,20 @@
     {
       "doc": "fdo37606",
       "losses": 0,
-      "coverage": "table x1",
-      "raw": 0.7889,
-      "blur2": 0.7646,
-      "png_blur2": 0.759,
+      "coverage": "forms x1, table x1",
+      "raw": 0.7883,
+      "blur2": 0.7632,
+      "png_blur2": 0.7575,
       "status": "UNSUPPORTED"
     },
     {
       "doc": "fdo53210",
       "losses": 0,
-      "raw": 0.9181,
-      "blur2": 0.8903,
-      "png_blur2": 0.8958,
-      "status": "FAIL"
+      "coverage": "forms x1",
+      "raw": 0.9195,
+      "blur2": 0.89,
+      "png_blur2": 0.8955,
+      "status": "UNSUPPORTED"
     },
     {
       "doc": "fdo55814",
@@ -101,10 +104,10 @@
     {
       "doc": "fdo69862",
       "losses": 0,
-      "coverage": "table x1",
-      "raw": 0.9739,
-      "blur2": 0.9714,
-      "png_blur2": 0.9707,
+      "coverage": "forms x1, note x1, table x1",
+      "raw": 0.9762,
+      "blur2": 0.9737,
+      "png_blur2": 0.973,
       "status": "PASS"
     },
     {
@@ -280,15 +283,16 @@
     {
       "doc": "ooo32780-1",
       "losses": 0,
-      "raw": 0.3315,
-      "blur2": 0.3532,
-      "png_blur2": 0.355,
-      "status": "FAIL"
+      "coverage": "note x2",
+      "raw": 0.4964,
+      "blur2": 0.5012,
+      "png_blur2": 0.5029,
+      "status": "UNSUPPORTED"
     },
     {
       "doc": "ooo77837-1",
       "losses": 0,
-      "coverage": "list x1",
+      "coverage": "forms x1, list x1",
       "raw": 0.5878,
       "blur2": 0.561,
       "png_blur2": 0.5696,
@@ -306,18 +310,19 @@
     {
       "doc": "paste-first-para-direct-format",
       "losses": 0,
-      "raw": 0.5376,
-      "blur2": 0.5529,
-      "png_blur2": 0.5493,
-      "status": "FAIL"
+      "raw": 0.9736,
+      "blur2": 0.996,
+      "png_blur2": 0.9871,
+      "status": "PASS"
     },
     {
       "doc": "space",
       "losses": 0,
+      "coverage": "tab x49",
       "raw": 0.6708,
       "blur2": 0.6787,
       "png_blur2": 0.6839,
-      "status": "FAIL"
+      "status": "UNSUPPORTED"
     },
     {
       "doc": "spellmenu-redline",
@@ -348,7 +353,7 @@
     {
       "doc": "tdf101729",
       "losses": 0,
-      "coverage": "table x1",
+      "coverage": "forms x1, table x1",
       "raw": 0.9722,
       "blur2": 0.9661,
       "png_blur2": 0.9667,
@@ -375,7 +380,7 @@
     {
       "doc": "tdf108482",
       "losses": 0,
-      "coverage": "table x1",
+      "coverage": "forms x1, table x1",
       "raw": 0.9828,
       "blur2": 0.9762,
       "png_blur2": 0.9775,
@@ -409,26 +414,28 @@
     {
       "doc": "tdf113289",
       "losses": 0,
-      "raw": 0.9883,
-      "blur2": 0.9847,
-      "png_blur2": 0.9849,
+      "coverage": "note x1",
+      "raw": 0.9907,
+      "blur2": 0.9862,
+      "png_blur2": 0.9859,
       "status": "PASS"
     },
     {
       "doc": "Word2010AsCharShape",
       "losses": 0,
+      "coverage": "custom-shape x1",
       "raw": 0.605,
       "blur2": 0.6165,
       "png_blur2": 0.6233,
-      "status": "FAIL"
+      "status": "UNSUPPORTED"
     },
     {
       "doc": "ZoneMacroTest",
       "losses": 0,
-      "coverage": "table x1",
-      "raw": 0.7281,
-      "blur2": 0.6903,
-      "png_blur2": 0.6925,
+      "coverage": "forms x1, tab x2, table x1",
+      "raw": 0.7734,
+      "blur2": 0.7682,
+      "png_blur2": 0.7712,
       "status": "UNSUPPORTED"
     }
   ]
