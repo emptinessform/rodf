@@ -17,15 +17,10 @@
 
 ## 지금 작업 (in progress)
 
-- [ ] **합성 기울임 (synthetic oblique)** — 이탤릭 페이스 없는 폰트(맑은 고딕
-  등)에서 LO처럼 스큐 합성. 스코어보드 bold-italic 0.69의 원인.
-  구현 위치: oxml-layout 공유 계층("중립 계층 강화" 기준 첫 적용).
-  MCFS 합성 볼드/이탤릭과 동일 주제. TDD.
-
-## 대기열 (우선순위순)
-
 - [ ] **한글 줄바꿈 규칙 정합** — wrap-korean 0.84. LO 규칙 vs unicode-linebreak
   차이 분석 → 규칙 맞춤.
+
+## 대기열 (우선순위순)
 - [ ] **multi-paragraph 재측정** — 0.90. 위 두 항목 해결 후 자동 개선 예상,
   잔여 격차만 별도 분석.
 - [ ] **font-batang 경계선 판정** — 0.9494 (임계값 0.95 직하). 세리프 AA 차이
@@ -40,6 +35,10 @@
 
 ### 2026-08-23
 
+- ✅ **합성 기울임(synthetic oblique)** — 이탤릭 페이스 없는 폰트에서 20°
+  (DirectWrite 관례, LO 실측 tan 0.358) 스큐 합성. 공유 계층 구현: FontData에
+  synthetic_italic 플래그 + 래스터 글리프 변환·PDF Tm 스큐 (포크 38f2aa8에 포함).
+  스코어보드 bold-italic 0.69→**0.97 PASS**, 전체 6/10→**7/10**.
 - ✅ 설계 문서 저장소 이관 (docs/DESIGN.md 정본화) — `af1cb9e`
 - ✅ 용어 확정: FSL → **MCFS**(크레이트 rmcf), 문서 전면 반영 — `c1bea82` (D12)
 - ✅ MCFS 라이선스 분석 문서 (docs/mcfs-licensing.md) — `3941085`

@@ -1,12 +1,12 @@
 # rodf fidelity scoreboard
 
-Generated 2026-08-23 06:18 UTC · oracle: local LibreOffice · pass = blur2 SSIM ≥ 0.95
+Generated 2026-08-23 07:17 UTC · oracle: local LibreOffice · pass = blur2 SSIM ≥ 0.95
 
-**6/10 PASS**
+**7/10 PASS**
 
 | doc | status | raw SSIM | blur2 SSIM | losses |
 |---|---|---|---|---|
-| bold-italic | FAIL | 0.5967 | 0.6878 | 0 |
+| bold-italic | PASS | 0.9012 | 0.9729 | 0 |
 | font-batang | FAIL | 0.8005 | 0.9494 | 0 |
 | font-gulim | PASS | 0.8651 | 0.9558 | 0 |
 | mixed-script-sizes | PASS | 0.9546 | 0.9904 | 0 |

@@ -1,13 +1,13 @@
 {
-  "generated": "2026-08-23 06:18 UTC",
+  "generated": "2026-08-23 07:17 UTC",
   "threshold": 0.95,
   "results": [
     {
       "doc": "bold-italic",
       "losses": 0,
-      "raw": 0.5967,
-      "blur2": 0.6878,
-      "status": "FAIL"
+      "raw": 0.9012,
+      "blur2": 0.9729,
+      "status": "PASS"
     },
     {
       "doc": "font-batang",

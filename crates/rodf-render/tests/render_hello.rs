@@ -177,3 +177,54 @@ mod line_gap {
         );
     }
 }
+
+mod synthetic_italic {
+    use rodf_core::Document;
+
+    /// 밴드 내 행별 잉크 x-중심의 선형 기울기 (최소제곱).
+    /// 합성 기울임이 적용되면 글자가 오른쪽으로 누워 기울기가 음의 방향으로
+    /// tan(20°)≈0.364만큼 이동한다 (DirectWrite oblique 관례, LO 실측 0.358).
+    fn ink_slope(png: &[u8], y0: usize, y1: usize) -> f64 {
+        let decoder = png::Decoder::new(std::io::Cursor::new(png));
+        let mut reader = decoder.read_info().unwrap();
+        let mut buf = vec![0u8; reader.output_buffer_size().unwrap()];
+        let info = reader.next_frame(&mut buf).unwrap();
+        let (w, h) = (info.width as usize, info.height as usize);
+        let bpp = info.buffer_size() / (w * h);
+        let mut pts: Vec<(f64, f64)> = Vec::new();
+        for y in y0..y1.min(h) {
+            let xs: Vec<f64> = (0..w)
+                .filter(|&x| buf[(y * w + x) * bpp] < 245)
+                .map(|x| x as f64)
+                .collect();
+            if !xs.is_empty() {
+                pts.push((y as f64, xs.iter().sum::<f64>() / xs.len() as f64));
+            }
+        }
+        let n = pts.len() as f64;
+        let (sy, sx): (f64, f64) = pts.iter().fold((0.0, 0.0), |a, p| (a.0 + p.0, a.1 + p.1));
+        let (my, mx) = (sy / n, sx / n);
+        let num: f64 = pts.iter().map(|p| (p.0 - my) * (p.1 - mx)).sum();
+        let den: f64 = pts.iter().map(|p| (p.0 - my) * (p.0 - my)).sum();
+        num / den
+    }
+
+    /// 이탤릭 페이스가 없는 맑은 고딕의 이탤릭 문단은 합성 스큐로 렌더돼야 한다.
+    /// 직립 실측 기울기 -0.68(글리프 분포 편향), 20° 스큐 적용 시 ≈ -1.05.
+    #[test]
+    fn italic_paragraph_is_sheared_when_face_has_no_italic() {
+        let doc = Document::open(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../corpus/bold-italic.odt"
+        ))
+        .expect("bold-italic.odt should open");
+        let rendered = rodf_render::render(&doc).expect("render");
+        let png = rendered.page_png(0, 144.0).expect("page 0");
+        // 이탤릭 문단 밴드 (144dpi, 고정 픽스처): y 157..184
+        let slope = ink_slope(&png, 157, 184);
+        assert!(
+            (-1.25..=-0.90).contains(&slope),
+            "italic line slope {slope:.3} should be ~-1.05 (upright is ~-0.68)"
+        );
+    }
+}
