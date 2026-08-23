@@ -1,65 +1,93 @@
 # rodf
 
-**Lightweight, high-fidelity ODF (OpenDocument) rendering in pure Rust.** ODT first.
+**순수 Rust로 만드는 경량 고충실도 ODF(OpenDocument) 렌더링. ODT 우선.**
+**Lightweight, high-fidelity ODF (OpenDocument) rendering in pure Rust. ODT first.**
 
-rodf is the ODF member of a family of Rust document-format projects:
-[rdocx](https://github.com/tensorbee/rdocx) (DOCX library + layout engine),
-[rdoc](https://github.com/emptinessform/rdoc) (browser DOCX viewer/editor), and
-[rhwp](https://github.com/edwardkim/rhwp) (HWP/HWPX full stack).
+rodf는 Rust 문서 포맷 프로젝트 패밀리의 ODF 구성원입니다:
+[rdocx](https://github.com/tensorbee/rdocx) (DOCX 라이브러리 + 레이아웃 엔진),
+[rdoc](https://github.com/emptinessform/rdoc) (브라우저 DOCX 뷰어/에디터),
+[rhwp](https://github.com/edwardkim/rhwp) (HWP/HWPX 풀스택).
 
-The gap rodf targets: LibreOffice-grade ODT rendering without shipping LibreOffice.
-ZetaOffice ports the whole suite to WASM (hundreds of MB); pure-Rust ODF crates focus
-on document *generation* without layout. rodf aims at the middle — a small library
-that parses ODT and renders it faithfully to PDF/PNG, with **Korean typography as a
-first-class requirement**.
+> rodf is the ODF member of a family of Rust document-format projects:
+> [rdocx](https://github.com/tensorbee/rdocx) (DOCX library + layout engine),
+> [rdoc](https://github.com/emptinessform/rdoc) (browser DOCX viewer/editor), and
+> [rhwp](https://github.com/edwardkim/rhwp) (HWP/HWPX full stack).
 
-## Status: early (M1 in progress)
+rodf가 노리는 빈 자리: **LibreOffice를 통째로 싣지 않고 LibreOffice급 ODT 렌더링.**
+ZetaOffice는 스위트 전체를 WASM으로 포팅하고(수백 MB), 순수 Rust ODF 크레이트들은
+레이아웃 없이 문서 *생성*에 집중합니다. rodf는 그 중간 — ODT를 파싱해 PDF/PNG로
+충실하게 렌더하는 작은 라이브러리를 지향하며, **한국어 타이포그래피를 1급
+요구사항**으로 둡니다.
 
-`rodf render in.odt out.pdf` works for text documents today:
+> The gap rodf targets: LibreOffice-grade ODT rendering without shipping LibreOffice.
+> ZetaOffice ports the whole suite to WASM (hundreds of MB); pure-Rust ODF crates focus
+> on document *generation* without layout. rodf aims at the middle — a small library
+> that parses ODT and renders it faithfully to PDF/PNG, with **Korean typography as a
+> first-class requirement**.
 
-- ODT package + `content.xml` / `styles.xml` parsing
-- Automatic-style / named-style / default-style chain resolution, with Western
-  (`fo:*`) and East Asian (`style:*-asian`) properties kept separate — mixed
-  Korean/Latin text renders at its correct per-script size and weight
-- Master-page geometry (page size, margins)
-- Rendering through the [rdocx](https://github.com/tensorbee/rdocx) layout engine
-  (adapter approach), PDF and PNG output
+## 현황 / Status: early (M1 진행 중)
 
-LibreOffice (left) vs rodf (right), same `hello.odt`:
+텍스트 문서에 대해 `rodf render in.odt out.pdf`가 오늘 동작합니다:
+
+- ODT 패키지 + `content.xml` / `styles.xml` 파싱
+- automatic style / named style / default-style 체인 해석 — 서양(`fo:*`)과
+  동아시아(`style:*-asian`) 속성을 분리 유지해, 한글·라틴 혼합 텍스트가
+  문자 체계별 올바른 크기와 굵기로 렌더됩니다
+- master-page 페이지 기하 (페이지 크기, 여백)
+- [rdocx](https://github.com/tensorbee/rdocx) 레이아웃 엔진을 통한 렌더링
+  (어댑터 방식), PDF·PNG 출력
+
+> `rodf render in.odt out.pdf` works for text documents today: ODT package parsing,
+> automatic/named/default style chain resolution with Western (`fo:*`) and East Asian
+> (`style:*-asian`) properties kept separate — mixed Korean/Latin text renders at its
+> correct per-script size and weight — master-page geometry, and rendering through the
+> rdocx layout engine (adapter approach) to PDF and PNG.
+
+LibreOffice(왼쪽) vs rodf(오른쪽), 같은 `hello.odt`:
 
 ![LibreOffice vs rodf side-by-side](docs/side-by-side.png)
 
-Every change is judged against a **LibreOffice oracle** — `tools/oracle.py` renders
-the same document through headless LibreOffice and computes a content-cropped SSIM.
-Current score on the hello fixture: **0.49** against a 0.95 target; the remaining gap
-is line-height model differences (Word-style vs LibreOffice font-metric-proportional
-spacing), which drives the roadmap below.
+모든 변경은 **LibreOffice 오라클**로 판정합니다 — `tools/oracle.py`가 같은 문서를
+headless LibreOffice로 렌더해 콘텐츠 크롭 SSIM을 계산합니다. hello 픽스처의 현재
+점수는 목표 0.95 대비 **0.49**. 남은 격차는 행 높이 모델 차이(Word식 vs LibreOffice의
+폰트 메트릭 비례 행간)이며, 이것이 아래 로드맵을 끌고 갑니다.
 
-## Crates
+> Every change is judged against a **LibreOffice oracle** — `tools/oracle.py` renders
+> the same document through headless LibreOffice and computes a content-cropped SSIM.
+> Current score on the hello fixture: **0.49** against a 0.95 target; the remaining gap
+> is line-height model differences (Word-style vs LibreOffice font-metric-proportional
+> spacing), which drives the roadmap below.
 
-| Crate | Role |
+## 크레이트 / Crates
+
+| Crate | 역할 / Role |
 |---|---|
-| `rodf-core` | ODF package + document model + style resolution (zip + quick-xml only) |
-| `rodf-render` | ODF → layout-engine adapter, PDF/PNG output, mapping-loss tracking |
+| `rodf-core` | ODF 패키지 + 문서 모델 + 스타일 해석 (zip + quick-xml만) / ODF package + document model + style resolution (zip + quick-xml only) |
+| `rodf-render` | ODF → 레이아웃 엔진 어댑터, PDF/PNG 출력, 매핑 손실 추적 / ODF → layout-engine adapter, PDF/PNG output, mapping-loss tracking |
 | `rodf-cli` | `rodf render in.odt out.{pdf,png}` |
 
-## Roadmap
+## 로드맵 / Roadmap
 
-- **M1** — single-paragraph fidelity: parse → render → oracle SSIM ≥ 0.95
-- **M1.5** — oracle corpus (50–100 public ODT files) + pinned-LibreOffice Docker CI
-- **M2** — format-neutral layout engine work (the adapter's mapping-loss list decides
+- **M1** — 단일 문단 충실도: 파싱 → 렌더 → 오라클 SSIM ≥ 0.95
+  / single-paragraph fidelity: parse → render → oracle SSIM ≥ 0.95
+- **M1.5** — 오라클 코퍼스(공개 ODT 50–100개) + LibreOffice 버전 고정 Docker CI
+  / oracle corpus (50–100 public ODT files) + pinned-LibreOffice Docker CI
+- **M2** — 포맷 중립 레이아웃 엔진 작업 (어댑터의 매핑 손실 목록이 계속 어댑터로
+  갈지, rodf 전용 플로우 엔진을 만들지 결정)
+  / format-neutral layout engine work (the adapter's mapping-loss list decides
   whether rodf keeps adapting or gets its own flow engine)
-- **M2.5** — public fidelity dashboard ("Are we ODF yet?")
-- **M3+** — tables, images, headers/footers, SVG backend, ODS/ODP, WASM/npm
+- **M2.5** — 공개 충실도 대시보드 "Are we ODF yet?" / public fidelity dashboard
+- **M3+** — 표, 이미지, 머리글/바닥글, SVG 백엔드, ODS/ODP, WASM/npm
+  / tables, images, headers/footers, SVG backend, ODS/ODP, WASM/npm
 
-## Development
+## 개발 / Development
 
 ```sh
-cargo test --workspace          # 18 tests, all written test-first
+cargo test --workspace          # 테스트 18개, 전부 테스트 우선 작성 / 18 tests, all written test-first
 cargo run -p rodf-cli -- render crates/rodf-core/tests/fixtures/hello.odt out.pdf
-python tools/oracle.py crates/rodf-core/tests/fixtures/hello.odt   # needs LibreOffice
+python tools/oracle.py crates/rodf-core/tests/fixtures/hello.odt   # LibreOffice 필요 / needs LibreOffice
 ```
 
-## License
+## 라이선스 / License
 
 MIT OR Apache-2.0
