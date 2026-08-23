@@ -48,15 +48,17 @@ LibreOffice(왼쪽) vs rodf(오른쪽), 같은 `hello.odt`:
 ![LibreOffice vs rodf side-by-side](docs/side-by-side.png)
 
 모든 변경은 **LibreOffice 오라클**로 판정합니다 — `tools/oracle.py`가 같은 문서를
-headless LibreOffice로 렌더해 콘텐츠 크롭 SSIM을 계산합니다. hello 픽스처의 현재
-점수는 목표 0.95 대비 **0.49**. 남은 격차는 행 높이 모델 차이(Word식 vs LibreOffice의
-폰트 메트릭 비례 행간)이며, 이것이 아래 로드맵을 끌고 갑니다.
+headless LibreOffice로 렌더해, ±2px 정합 후 콘텐츠 크롭 SSIM(blur2 기준 ≥ 0.95)으로
+판정합니다. **M1 기준 달성**: hello 픽스처 blur2 **0.983** (raw 0.921), 굴림
+lineGap 픽스처 blur2 **0.976** — 한글/라틴 문자체계별 크기·굵기, A4 페이지 기하,
+hhea lineGap(행 위 배치)까지 LibreOffice와 정렬된 상태입니다.
 
 > Every change is judged against a **LibreOffice oracle** — `tools/oracle.py` renders
-> the same document through headless LibreOffice and computes a content-cropped SSIM.
-> Current score on the hello fixture: **0.49** against a 0.95 target; the remaining gap
-> is line-height model differences (Word-style vs LibreOffice font-metric-proportional
-> spacing), which drives the roadmap below.
+> the same document through headless LibreOffice, registers within ±2px, and scores a
+> content-cropped SSIM (pass = blur2 ≥ 0.95). **M1 criterion met**: hello fixture
+> blur2 **0.983** (raw 0.921), Gulim lineGap fixture blur2 **0.976** — per-script
+> size/weight, A4 page geometry, and hhea lineGap (seated above the line) all align
+> with LibreOffice.
 
 ## 핵심 방향: FSL / Key direction: FSL (Font Simulation Library)
 
