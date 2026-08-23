@@ -168,35 +168,50 @@ pub fn split_script_runs(text: &str) -> Vec<(Script, String)> {
 /// 각 런이 해당 체계의 글꼴·크기·굵기를 갖는다.
 fn map_paragraph(paragraph: &rodf_core::Paragraph) -> rlayout::Paragraph {
     let style = paragraph.style();
-    let runs = split_script_runs(paragraph.text())
-        .into_iter()
-        .map(|(script, segment)| {
-            let (family, size_pt, bold, italic) = match script {
-                Script::Western => (
-                    style.font_family.clone(),
-                    style.font_size_pt,
-                    style.bold,
-                    style.italic,
-                ),
-                Script::Asian => (
-                    style
-                        .font_family_asian
-                        .clone()
-                        .or_else(|| style.font_family.clone()),
-                    style.font_size_asian_pt.or(style.font_size_pt),
-                    style.bold_asian,
-                    style.italic_asian,
-                ),
-            };
-            rlayout::Run {
-                text: segment,
-                style: rlayout::TextStyle {
-                    font_family: family,
-                    font_size_pt: size_pt.unwrap_or(12.0),
-                    bold,
-                    italic,
-                },
-            }
+    let runs = paragraph
+        .spans()
+        .iter()
+        .flat_map(|span| {
+            let style = &span.style;
+            split_script_runs(&span.text)
+                .into_iter()
+                .map(|(script, segment)| {
+                    let (family, size_pt, bold, italic) = match script {
+                        Script::Western => (
+                            style.font_family.clone(),
+                            style.font_size_pt,
+                            style.bold,
+                            style.italic,
+                        ),
+                        Script::Asian => (
+                            style
+                                .font_family_asian
+                                .clone()
+                                .or_else(|| style.font_family.clone()),
+                            style.font_size_asian_pt.or(style.font_size_pt),
+                            style.bold_asian,
+                            style.italic_asian,
+                        ),
+                    };
+                    rlayout::Run {
+                        text: segment,
+                        style: rlayout::TextStyle {
+                            font_family: family,
+                            font_size_pt: size_pt.unwrap_or(12.0),
+                            bold,
+                            italic,
+                            background: style.background_rgb.map(|(r, g, b)| {
+                                rlayout::Color {
+                                    r: f64::from(r) / 255.0,
+                                    g: f64::from(g) / 255.0,
+                                    b: f64::from(b) / 255.0,
+                                    a: 1.0,
+                                }
+                            }),
+                        },
+                    }
+                })
+                .collect::<Vec<_>>()
         })
         .collect();
 
@@ -208,8 +223,8 @@ fn map_paragraph(paragraph: &rodf_core::Paragraph) -> rlayout::Paragraph {
             Some(rodf_core::Align::Justify) => rlayout::Align::Justify,
             Some(rodf_core::Align::Start) | None => rlayout::Align::Start,
         },
-        space_before_pt: 0.0,
-        space_after_pt: 0.0,
+        space_before_pt: style.margin_top_pt,
+        space_after_pt: style.margin_bottom_pt,
         hangul_word_wrap: None, // 기본값(true) = LO/ODF 관례
         tab_stops: style
             .tab_stops

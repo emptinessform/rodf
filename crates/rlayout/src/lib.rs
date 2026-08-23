@@ -7,13 +7,16 @@
 //! 줄바꿈 — Word 에뮬레이션 sentinel 없이 이것이 기본값이다.
 
 use oxml_layout::{
-    Color, FontManager, InlineItem, LayoutResult, LineBreakParams, LineItem, LineSpacing,
-    PageFrame, Point, PositionedElement, TextSegment,
+    FontManager, InlineItem, LayoutResult, LineBreakParams, LineItem, LineSpacing, PageFrame,
+    Point, PositionedElement, Rect, TextSegment,
 };
-pub use oxml_layout::{TabAlign, TabStop};
+pub use oxml_layout::{Color, TabAlign, TabStop};
 
-/// LibreOffice/ODF의 기본 탭 간격: 1.25cm.
-pub const DEFAULT_TAB_INTERVAL_PT: f64 = 35.433_070_866_141_732;
+/// LibreOffice 프로그램 기본 탭 간격: 2cm — 문서(styles.xml)가
+/// style:tab-stop-distance를 정의하지 않을 때의 폴백.
+/// (space.odt 오라클 PDF 실측: 탭 열 56.7pt, 숫자 열 226.8pt = 4x2cm.
+/// LO 저장 문서는 대개 1.25cm를 명시하므로 이 폴백은 손제작 문서용.)
+pub const DEFAULT_TAB_INTERVAL_PT: f64 = 2.0 * 72.0 / 2.54;
 
 /// 페이지 기하 (pt).
 #[derive(Debug, Clone, PartialEq)]
@@ -33,6 +36,8 @@ pub struct TextStyle {
     pub font_size_pt: f64,
     pub bold: bool,
     pub italic: bool,
+    /// 문자 배경색 (하이라이트) — 행 높이 전체를 채운다.
+    pub background: Option<Color>,
 }
 
 #[derive(Debug, Clone)]
@@ -103,7 +108,7 @@ pub fn layout_with_fonts(
     let mut cursor_y = page.margin_top_pt;
     let mut page_number = 1usize;
 
-    let mut flush_page =
+    let flush_page =
         |elements: &mut Vec<PositionedElement>, pages: &mut Vec<PageFrame>, n: usize| {
             pages.push(PageFrame::new(
                 n,
@@ -151,7 +156,7 @@ pub fn layout_with_fonts(
                         underline: None,
                         strike: false,
                         dstrike: false,
-                        highlight: None,
+                        highlight: style.background,
                         baseline_offset: 0.0,
                         hyperlink_url: None,
                         field_kind: None,
@@ -206,6 +211,18 @@ pub fn layout_with_fonts(
             for item in &line.items {
                 match item {
                     LineItem::Text(seg) | LineItem::Marker(seg) => {
+                        // 문자 배경 — 행 상단부터 행 높이 전체 (LO 관례).
+                        if let Some(color) = seg.highlight {
+                            elements.push(PositionedElement::FilledRect {
+                                rect: Rect {
+                                    x,
+                                    y: cursor_y,
+                                    width: seg.width,
+                                    height: line.height,
+                                },
+                                color,
+                            });
+                        }
                         if !seg.glyph_ids.is_empty() {
                             elements.push(PositionedElement::Text(oxml_layout::GlyphRun {
                                 origin: Point { x, y: baseline_y },

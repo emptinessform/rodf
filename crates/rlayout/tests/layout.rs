@@ -24,6 +24,7 @@ fn para(text: &str, size: f64) -> Block {
                 font_size_pt: size,
                 bold: false,
                 italic: false,
+                background: None,
             },
         }],
         align: Align::Start,
@@ -154,4 +155,40 @@ fn long_document_paginates() {
             }
         }
     }
+}
+
+#[test]
+fn background_emits_filled_rect_behind_text() {
+    let mut doc = Document {
+        page: A4,
+        default_tab_interval_pt: None,
+        blocks: vec![para("칠해진 글자", 12.0)],
+    };
+    let Block::Paragraph(p) = &mut doc.blocks[0];
+    p.runs[0].style.background = Some(oxml_layout::Color::from_hex("#00ff00"));
+    let result = rlayout::layout(&doc).expect("layout");
+    let rects: Vec<_> = result.pages[0]
+        .elements
+        .iter()
+        .filter_map(|e| match e {
+            PositionedElement::FilledRect { rect, color } => Some((rect.clone(), *color)),
+            _ => None,
+        })
+        .collect();
+    // 세그먼트(어절)마다 하나씩 — 인접 사각형이 연속 띠를 이룬다.
+    assert!(!rects.is_empty(), "highlight rects expected");
+    let (lh, _) = malgun_metrics(12.0);
+    let mut expected_x = None;
+    for (rect, color) in &rects {
+        assert_eq!((color.r, color.g, color.b), (0.0, 1.0, 0.0));
+        // 행 상단(y=margin_top)에서 시작해 행 높이 전체를 덮는다
+        assert!((rect.y - 56.7).abs() < 0.05, "rect top at line top: {}", rect.y);
+        assert!((rect.height - lh).abs() < 0.05, "rect height = line height");
+        if let Some(x) = expected_x {
+            assert!((rect.x - x) < 0.05_f64, "rects are contiguous");
+        }
+        expected_x = Some(rect.x + rect.width);
+    }
+    let total: f64 = rects.iter().map(|(r, _)| r.width).sum();
+    assert!(total > 10.0);
 }

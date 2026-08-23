@@ -28,6 +28,22 @@
 
 ### 2026-08-23
 
+- ✅ **text:span 문자 스타일 + ODF 텍스트 모델 3건 — 와일드 마지막 FAIL 해소
+  (34 PASS / 16 UNSUPPORTED / 0 FAIL / 0 CRASH)** — space.odt 0.68은 결함
+  4중첩이었음: ① **스팬**: 파서 스팬 스택(중첩 포함)→RawSegment, styles.xml
+  family="text" named 수집, 리졸버 체인(문단 ← 스팬 바깥→안쪽),
+  `Paragraph::spans()` API, 렌더러 스팬×스크립트 런 분할. ② **ODF 공백 병합**
+  (D14): 연속 공백은 스팬 경계 넘어 1개, 문단 선두 제거, text:s는 무조건
+  방출+상태 리셋 — space.odt 기대값 27케이스로 역산 검증. ③ **quick-xml 0.41
+  GeneralRef**: 엔티티(&lt; 등)가 별도 이벤트로 와서 통째 증발하던 결함.
+  ④ **LO 내장 Heading + 문단 여백**: 스타일 미정의 text:h에 Liberation Sans
+  14pt×배율(H1 130%)·bold·0.42/0.21cm(default←builtin←chain 순),
+  fo:margin-top/bottom 파싱→rlayout space_before/after. ⑤ **문자 배경색**:
+  fo:background-color→FilledRect(행 높이 전체). ⑥ **LO 기본 탭 간격 = 2cm
+  실측**(LO PDF 좌표 파싱, 1.25cm는 LO 저장 문서의 명시값일 뿐) + self-closing
+  paragraph-properties의 tab-stop-distance 미파싱 은폐 결함 수정.
+  space.odt 0.9765 PASS, 매트릭스 10/10 유지, 테스트 46개.
+
 - ✅ **탭 스톱 지원** — LO 기본 간격 1.25cm 실측·파라미터화
   (default_tab_interval_pt, Word 36pt 불변), 명시 스톱(left/center/right)
   파싱+상속, rlayout 런의 탭 분할. 엔진의 숨은 버그 2개 수정(포크 b97c03d):

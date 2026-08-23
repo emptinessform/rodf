@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-23 12:39 UTC",
+  "generated": "2026-08-23 14:31 UTC",
   "threshold": 0.95,
   "results": [
     {
@@ -69,9 +69,9 @@
       "doc": "fdo55814",
       "losses": 0,
       "coverage": "table x1",
-      "raw": 0.6771,
-      "blur2": 0.6554,
-      "png_blur2": 0.6491,
+      "raw": 0.6712,
+      "blur2": 0.6501,
+      "png_blur2": 0.6442,
       "status": "UNSUPPORTED"
     },
     {
@@ -242,9 +242,9 @@
     {
       "doc": "feature_text_background-color",
       "losses": 0,
-      "raw": 0.9738,
-      "blur2": 0.9543,
-      "png_blur2": 0.943,
+      "raw": 0.9876,
+      "blur2": 0.9973,
+      "png_blur2": 0.9788,
       "status": "PASS"
     },
     {
@@ -284,27 +284,27 @@
       "doc": "ooo32780-1",
       "losses": 0,
       "coverage": "note x2",
-      "raw": 0.4964,
-      "blur2": 0.5012,
-      "png_blur2": 0.5029,
+      "raw": 0.5103,
+      "blur2": 0.5191,
+      "png_blur2": 0.5277,
       "status": "UNSUPPORTED"
     },
     {
       "doc": "ooo77837-1",
       "losses": 0,
       "coverage": "forms x1, list x1",
-      "raw": 0.5878,
-      "blur2": 0.561,
-      "png_blur2": 0.5696,
+      "raw": 0.5572,
+      "blur2": 0.5386,
+      "png_blur2": 0.537,
       "status": "UNSUPPORTED"
     },
     {
       "doc": "PageBackground",
       "losses": 0,
       "coverage": "frame x4",
-      "raw": 0.3893,
-      "blur2": 0.3927,
-      "png_blur2": 0.4104,
+      "raw": 0.4005,
+      "blur2": 0.3987,
+      "png_blur2": 0.4158,
       "status": "UNSUPPORTED"
     },
     {
@@ -318,10 +318,10 @@
     {
       "doc": "space",
       "losses": 0,
-      "raw": 0.6725,
-      "blur2": 0.6795,
-      "png_blur2": 0.6852,
-      "status": "FAIL"
+      "raw": 0.9437,
+      "blur2": 0.9765,
+      "png_blur2": 0.973,
+      "status": "PASS"
     },
     {
       "doc": "spellmenu-redline",
@@ -432,8 +432,8 @@
       "doc": "ZoneMacroTest",
       "losses": 0,
       "coverage": "forms x1, table x1",
-      "raw": 0.7926,
-      "blur2": 0.7751,
+      "raw": 0.7989,
+      "blur2": 0.7632,
       "png_blur2": 0.7781,
       "status": "UNSUPPORTED"
     }

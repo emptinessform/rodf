@@ -181,3 +181,134 @@ mod coverage_wild {
         assert!(doc.paragraphs().len() >= 20, "sections must not swallow paragraphs: {}", doc.paragraphs().len());
     }
 }
+
+mod spans {
+    use rodf_core::Document;
+
+    fn doc() -> Document {
+        Document::open(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/fixtures/spans.odt"
+        ))
+        .expect("spans.odt should open")
+    }
+
+    /// text:span은 문단 스타일 위에 문자 스타일을 덮은 세그먼트가 된다.
+    /// 중첩 스팬은 바깥 스팬 속성을 상속한 채 안쪽 속성을 더한다.
+    #[test]
+    fn spans_carry_character_styles() {
+        let d = doc();
+        let p = &d.paragraphs()[0];
+        let spans = p.spans();
+        let texts: Vec<&str> = spans.iter().map(|s| s.text.as_str()).collect();
+        assert_eq!(texts, vec!["일반 ", "굵게큰 ", "중첩", " 꼬리"]);
+
+        assert!(!spans[0].style.bold);
+        assert_eq!(spans[0].style.font_size_pt, Some(12.0));
+
+        assert!(spans[1].style.bold, "T1 bold");
+        assert_eq!(spans[1].style.font_size_pt, Some(20.0));
+        assert!(!spans[1].style.italic);
+
+        // 중첩: T1(bold, 20pt) 상속 + T2(italic)
+        assert!(spans[2].style.bold, "nested keeps outer bold");
+        assert!(spans[2].style.italic, "nested adds italic");
+        assert_eq!(spans[2].style.font_size_pt, Some(20.0));
+
+        assert!(!spans[3].style.bold, "tail returns to paragraph style");
+        assert_eq!(spans[3].style.font_size_pt, Some(12.0));
+    }
+
+    /// 스팬 없는 문단은 문단 스타일의 단일 스팬이다 (기존 동작 보존).
+    #[test]
+    fn spanless_paragraph_is_one_span() {
+        let d = Document::open(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/fixtures/hello.odt"
+        ))
+        .unwrap();
+        let p = &d.paragraphs()[1];
+        assert_eq!(p.spans().len(), 1);
+        assert_eq!(p.spans()[0].text, p.text());
+    }
+}
+
+mod whitespace {
+    use rodf_core::Document;
+
+    /// ODF 1.2 공백 병합: 문자 데이터의 연속 공백(스페이스/탭/개행)은
+    /// 스팬 경계를 넘어 1개로 병합, 문단 선두 공백 제거, text:s는
+    /// 무조건 방출 + 병합 상태 리셋 (corpus-wild/space.odt 기대값 실측).
+    #[test]
+    fn odf_whitespace_collapsing() {
+        let d = Document::open(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/fixtures/whitespace.odt"
+        ))
+        .expect("whitespace.odt should open");
+        let texts: Vec<&str> = d.paragraphs().iter().map(|p| p.text()).collect();
+        assert_eq!(
+            texts,
+            vec![
+                "a b",       // 연속 리터럴 2개 → 1개
+                "leading",   // 문단 선두 공백 제거
+                "a b",       // 스팬 경계 넘어 병합 ("a " + " b")
+                "a    b",    // s(1) + 리터럴(리셋 후 생존) + s(2) = 4칸
+                "a b",       // 스페이스+탭문자+스페이스 → 1개
+                // 엔티티 참조는 문자로 복원된다 (quick-xml GeneralRef)
+                "<span>a & b's \"q\" AB",
+            ]
+        );
+    }
+}
+
+mod headings {
+    use rodf_core::Document;
+
+    /// 스타일 정의가 없는 text:h는 LO 내장 Heading 기본값을 받는다:
+    /// Liberation Sans, 14pt x 레벨 배율(H1 130%), bold,
+    /// 위 0.42cm / 아래 0.21cm 여백. (space.odt 오라클 실측 근거)
+    #[test]
+    fn builtin_heading_defaults() {
+        let d = Document::open(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/fixtures/heading.odt"
+        ))
+        .expect("heading.odt should open");
+        let ps = d.paragraphs();
+        assert_eq!(ps.len(), 3);
+
+        let h1 = ps[0].style();
+        assert_eq!(h1.font_family.as_deref(), Some("Liberation Sans"));
+        assert!((h1.font_size_pt.unwrap() - 18.2).abs() < 0.01, "H1 = 14pt x 130%");
+        assert!(h1.bold);
+        assert!((h1.margin_top_pt - 11.9055).abs() < 0.01, "0.42cm above");
+        assert!((h1.margin_bottom_pt - 5.9528).abs() < 0.01, "0.21cm below");
+
+        let body = ps[1].style();
+        assert!(!body.bold);
+        assert_eq!(body.margin_top_pt, 0.0);
+
+        let h2 = ps[2].style();
+        assert!((h2.font_size_pt.unwrap() - 16.1).abs() < 0.01, "H2 = 14pt x 115%");
+        assert!(h2.bold);
+    }
+}
+
+mod background {
+    use rodf_core::Document;
+
+    /// fo:background-color는 문자 배경으로 해석된다 ("transparent"는 없음).
+    #[test]
+    fn span_background_color() {
+        let d = Document::open(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/fixtures/background.odt"
+        ))
+        .expect("background.odt should open");
+        let spans = d.paragraphs()[0].spans();
+        assert_eq!(spans.len(), 2);
+        assert_eq!(spans[0].style.background_rgb, None);
+        assert_eq!(spans[1].style.background_rgb, Some((0, 255, 0)));
+    }
+}

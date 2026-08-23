@@ -1,10 +1,10 @@
 # rodf fidelity scoreboard
 
-Generated 2026-08-23 12:39 UTC · oracle v2: 양쪽 PDF를 동일 래스터라이저(pdftoppm)로 비교 · pass = blur2 SSIM ≥ 0.95
+Generated 2026-08-23 14:31 UTC · oracle v2: 양쪽 PDF를 동일 래스터라이저(pdftoppm)로 비교 · pass = blur2 SSIM ≥ 0.95
 
 `png blur2`는 참고 열: LO PNG 내보내기 vs rodf 자체 래스터 (힌팅/감마 차이 포함).
 
-**33/50 PASS** · 16 unsupported (coverage gaps)
+**34/50 PASS** · 16 unsupported (coverage gaps)
 
 | doc | status | raw SSIM | blur2 SSIM | png blur2 | coverage gaps |
 |---|---|---|---|---|---|
@@ -15,7 +15,7 @@ Generated 2026-08-23 12:39 UTC · oracle v2: 양쪽 PDF를 동일 래스터라�
 | empty-svg-family-name | UNSUPPORTED | 0.9247 | 0.9232 | 0.923 | list x1 |
 | fdo37606 | UNSUPPORTED | 0.7883 | 0.7632 | 0.7575 | forms x1, table x1 |
 | fdo53210 | UNSUPPORTED | 0.9195 | 0.89 | 0.8955 | forms x1 |
-| fdo55814 | UNSUPPORTED | 0.6771 | 0.6554 | 0.6491 | table x1 |
+| fdo55814 | UNSUPPORTED | 0.6712 | 0.6501 | 0.6442 | table x1 |
 | fdo56272 | PASS | 0.9965 | 0.9969 | 0.997 | list x1 |
 | fdo60842 | PASS | 0.9902 | 0.9887 | 0.9889 | table x1 |
 | fdo68839 | PASS | 0.9886 | 0.9873 | 0.9874 | frame x4 |
@@ -35,16 +35,16 @@ Generated 2026-08-23 12:39 UTC · oracle v2: 양쪽 PDF를 동일 래스터라�
 | feature_table_merged-cells_all | PASS | 1.0 | 1.0 | 1.0 | table x1 |
 | feature_table_text | PASS | 0.9989 | 0.9986 | 0.9987 | table x1 |
 | feature_text | PASS | 0.9851 | 0.9945 | 0.9776 | — |
-| feature_text_background-color | PASS | 0.9738 | 0.9543 | 0.943 | — |
+| feature_text_background-color | PASS | 0.9876 | 0.9973 | 0.9788 | — |
 | feature_text_bold | PASS | 0.9792 | 0.9894 | 0.9661 | — |
 | feature_text_italic | PASS | 0.9808 | 0.9949 | 0.9702 | — |
 | hello | PASS | 0.9729 | 0.9927 | 0.9689 | — |
 | incorrectsum | PASS | 0.9545 | 0.9522 | 0.9535 | table x1 |
-| ooo32780-1 | UNSUPPORTED | 0.4964 | 0.5012 | 0.5029 | note x2 |
-| ooo77837-1 | UNSUPPORTED | 0.5878 | 0.561 | 0.5696 | forms x1, list x1 |
-| PageBackground | UNSUPPORTED | 0.3893 | 0.3927 | 0.4104 | frame x4 |
+| ooo32780-1 | UNSUPPORTED | 0.5103 | 0.5191 | 0.5277 | note x2 |
+| ooo77837-1 | UNSUPPORTED | 0.5572 | 0.5386 | 0.537 | forms x1, list x1 |
+| PageBackground | UNSUPPORTED | 0.4005 | 0.3987 | 0.4158 | frame x4 |
 | paste-first-para-direct-format | PASS | 0.9736 | 0.996 | 0.9871 | — |
-| space | FAIL | 0.6725 | 0.6795 | 0.6852 | — |
+| space | PASS | 0.9437 | 0.9765 | 0.973 | — |
 | spellmenu-redline | PASS | 0.911 | 0.9746 | 0.965 | — |
 | tdf100033_1 | PASS | 0.9955 | 0.9938 | 0.9945 | frame x3 |
 | tdf100033_2 | UNSUPPORTED | 0.8867 | 0.8558 | 0.859 | frame x3 |
@@ -57,4 +57,4 @@ Generated 2026-08-23 12:39 UTC · oracle v2: 양쪽 PDF를 동일 래스터라�
 | tdf109228 | PASS | 0.9915 | 0.9903 | 0.9903 | frame x1 |
 | tdf113289 | PASS | 0.9907 | 0.9862 | 0.9859 | note x1 |
 | Word2010AsCharShape | UNSUPPORTED | 0.605 | 0.6165 | 0.6233 | custom-shape x1 |
-| ZoneMacroTest | UNSUPPORTED | 0.7926 | 0.7751 | 0.7781 | forms x1, table x1 |
+| ZoneMacroTest | UNSUPPORTED | 0.7989 | 0.7632 | 0.7781 | forms x1, table x1 |

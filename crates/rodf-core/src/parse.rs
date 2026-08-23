@@ -55,6 +55,19 @@ fn read_para_align(e: &BytesStart) -> Option<Align> {
     attr_local(e, "text-align").and_then(|v| parse_align(&v))
 }
 
+/// paragraph-properties의 문단 속성(정렬/상하 여백)을 props에 반영한다.
+fn apply_para_props(e: &BytesStart, props: &mut RawTextProps) {
+    if let Some(align) = read_para_align(e) {
+        props.align = Some(align);
+    }
+    if let Some(v) = attr_local(e, "margin-top").and_then(|v| parse_length_pt(&v)) {
+        props.margin_top_pt = Some(v);
+    }
+    if let Some(v) = attr_local(e, "margin-bottom").and_then(|v| parse_length_pt(&v)) {
+        props.margin_bottom_pt = Some(v);
+    }
+}
+
 fn read_tab_stop(e: &BytesStart) -> Option<TabStop> {
     let pos_pt = attr_local(e, "position").and_then(|v| parse_length_pt(&v))?;
     let align = match attr_local(e, "type").as_deref() {
@@ -68,6 +81,15 @@ fn read_tab_stop(e: &BytesStart) -> Option<TabStop> {
 #[derive(Debug)]
 pub struct RawParagraph {
     pub style_name: Option<String>,
+    /// text:h의 아웃라인 레벨 (text:p는 None).
+    pub outline_level: Option<u8>,
+    pub segments: Vec<RawSegment>,
+}
+
+/// 문단 내 한 스팬 구간 — 적용된 스팬 스타일 스택(바깥→안쪽)과 텍스트.
+#[derive(Debug)]
+pub struct RawSegment {
+    pub span_styles: Vec<String>,
     pub text: String,
 }
 
@@ -148,6 +170,9 @@ fn read_text_props(e: &BytesStart) -> RawTextProps {
         italic_asian: attr_local(e, "font-style-asian").map(|v| v == "italic"),
         align: None,     // paragraph-properties에서 별도로 채워진다
         tab_stops: None, // tab-stops 컨테이너에서 별도로 채워진다
+        margin_top_pt: None,
+        margin_bottom_pt: None,
+        background_color: attr_local(e, "background-color"),
     }
 }
 
@@ -164,7 +189,8 @@ pub fn parse_styles_xml(xml: &str) -> Result<StyleSheet, OdfError> {
 
     enum Scope {
         None,
-        Named(String, RawStyle),
+        /// (이름, 스타일, character(text) 패밀리 여부)
+        Named(String, RawStyle, bool),
         Default(RawTextProps),
     }
     let mut scope = Scope::None;
@@ -189,13 +215,15 @@ pub fn parse_styles_xml(xml: &str) -> Result<StyleSheet, OdfError> {
                     }
                 }
                 b"style" if in_office_styles => {
-                    if attr_local(&e, "family").as_deref() == Some("paragraph") {
+                    let family = attr_local(&e, "family");
+                    if matches!(family.as_deref(), Some("paragraph") | Some("text")) {
                         scope = Scope::Named(
                             attr_local(&e, "name").unwrap_or_default(),
                             RawStyle {
                                 parent: attr_local(&e, "parent-style-name"),
                                 props: RawTextProps::default(),
                             },
+                            family.as_deref() == Some("text"),
                         );
                     }
                 }
@@ -205,12 +233,10 @@ pub fn parse_styles_xml(xml: &str) -> Result<StyleSheet, OdfError> {
                     }
                 }
                 b"paragraph-properties" => {
-                    if let Some(align) = read_para_align(&e) {
-                        match &mut scope {
-                            Scope::Named(_, style) => style.props.align = Some(align),
-                            Scope::Default(p) => p.align = Some(align),
-                            Scope::None => {}
-                        }
+                    match &mut scope {
+                        Scope::Named(_, style, _) => apply_para_props(&e, &mut style.props),
+                        Scope::Default(p) => apply_para_props(&e, p),
+                        Scope::None => {}
                     }
                     if matches!(scope, Scope::Default(_)) {
                         if let Some(d) = attr_local(&e, "tab-stop-distance")
@@ -224,7 +250,7 @@ pub fn parse_styles_xml(xml: &str) -> Result<StyleSheet, OdfError> {
                 }
                 // tab-stops 컨테이너 등장 = 상속 스톱 전체 대체 (ODF 규칙)
                 b"tab-stops" => match &mut scope {
-                    Scope::Named(_, style) => style.props.tab_stops = Some(Vec::new()),
+                    Scope::Named(_, style, _) => style.props.tab_stops = Some(Vec::new()),
                     Scope::Default(p) => p.tab_stops = Some(Vec::new()),
                     Scope::None => {}
                 },
@@ -247,7 +273,7 @@ pub fn parse_styles_xml(xml: &str) -> Result<StyleSheet, OdfError> {
                 b"tab-stop" => {
                     if let Some(stop) = read_tab_stop(&e) {
                         let slot = match &mut scope {
-                            Scope::Named(_, style) => Some(&mut style.props.tab_stops),
+                            Scope::Named(_, style, _) => Some(&mut style.props.tab_stops),
                             Scope::Default(p) => Some(&mut p.tab_stops),
                             Scope::None => None,
                         };
@@ -257,44 +283,51 @@ pub fn parse_styles_xml(xml: &str) -> Result<StyleSheet, OdfError> {
                     }
                 }
                 b"text-properties" => {
+                    // 병합으로 문단 속성(align/tabs/margins)은 그대로 보존된다.
                     let props = read_text_props(&e);
                     match &mut scope {
-                        Scope::Named(_, style) => {
-                            let align = style.props.align;
-                            let tabs = style.props.tab_stops.take();
-                            style.props = props;
-                            style.props.align = style.props.align.or(align);
-                            style.props.tab_stops = tabs;
+                        Scope::Named(_, style, _) => {
+                            style.props = style.props.overridden_by(&props);
                         }
-                        Scope::Default(p) => {
-                            let align = p.align;
-                            let tabs = p.tab_stops.take();
-                            *p = props;
-                            p.align = p.align.or(align);
-                            p.tab_stops = tabs;
-                        }
+                        Scope::Default(p) => *p = p.overridden_by(&props),
                         Scope::None => {}
                     }
                 }
                 b"paragraph-properties" => {
-                    if let Some(align) = read_para_align(&e) {
-                        match &mut scope {
-                            Scope::Named(_, style) => style.props.align = Some(align),
-                            Scope::Default(p) => p.align = Some(align),
-                            Scope::None => {}
+                    match &mut scope {
+                        Scope::Named(_, style, _) => apply_para_props(&e, &mut style.props),
+                        Scope::Default(p) => apply_para_props(&e, p),
+                        Scope::None => {}
+                    }
+                    // LO는 default-style의 paragraph-properties를 자식 없이
+                    // 자기닫힘으로 쓰므로 여기(Empty)서도 읽어야 한다.
+                    if matches!(scope, Scope::Default(_)) {
+                        if let Some(d) = attr_local(&e, "tab-stop-distance")
+                            .and_then(|v| parse_length_pt(&v))
+                        {
+                            if d > 0.0 {
+                                sheet.tab_stop_distance_pt = Some(d);
+                            }
                         }
                     }
                 }
                 // 자식 없는 style:style — 속성 없는 스타일로 등록.
                 b"style" if in_office_styles => {
-                    if attr_local(&e, "family").as_deref() == Some("paragraph") {
-                        sheet.named.insert(
-                            attr_local(&e, "name").unwrap_or_default(),
-                            RawStyle {
-                                parent: attr_local(&e, "parent-style-name"),
-                                props: RawTextProps::default(),
-                            },
-                        );
+                    let family = attr_local(&e, "family");
+                    let entry = RawStyle {
+                        parent: attr_local(&e, "parent-style-name"),
+                        props: RawTextProps::default(),
+                    };
+                    match family.as_deref() {
+                        Some("paragraph") => {
+                            sheet.named.insert(attr_local(&e, "name").unwrap_or_default(), entry);
+                        }
+                        Some("text") => {
+                            sheet
+                                .named_text
+                                .insert(attr_local(&e, "name").unwrap_or_default(), entry);
+                        }
+                        _ => {}
                     }
                 }
                 _ => {}
@@ -303,8 +336,14 @@ pub fn parse_styles_xml(xml: &str) -> Result<StyleSheet, OdfError> {
                 b"styles" => in_office_styles = false,
                 b"page-layout" => current_page_layout = None,
                 b"style" => {
-                    if let Scope::Named(name, style) = std::mem::replace(&mut scope, Scope::None) {
-                        sheet.named.insert(name, style);
+                    if let Scope::Named(name, style, is_text) =
+                        std::mem::replace(&mut scope, Scope::None)
+                    {
+                        if is_text {
+                            sheet.named_text.insert(name, style);
+                        } else {
+                            sheet.named.insert(name, style);
+                        }
                     }
                 }
                 b"default-style" => {
@@ -329,9 +368,33 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
     let mut in_automatic = false;
     let mut current_style: Option<(String, RawStyle)> = None;
 
-    // text:p 내부 텍스트 수집 상태. span 등 중첩 요소 깊이를 추적한다.
+    // text:p 내부 수집 상태. span 스타일 스택과 세그먼트 버퍼를 유지한다.
     let mut para: Option<RawParagraph> = None;
     let mut para_depth = 0usize;
+    let mut span_stack: Vec<(usize, String)> = Vec::new();
+    let mut seg_buf = String::new();
+    // ODF 1.2 공백 병합 상태: 문단 시작은 true(선두 공백 제거),
+    // 리터럴 공백 방출 시 true, text:s/tab/line-break 등 콘텐츠는 false로 리셋.
+    let mut last_was_space = true;
+
+    // 현재 버퍼를 세그먼트로 확정한다.
+    fn flush_segment(
+        para: &mut Option<RawParagraph>,
+        span_stack: &[(usize, String)],
+        seg_buf: &mut String,
+    ) {
+        if seg_buf.is_empty() {
+            return;
+        }
+        if let Some(p) = para {
+            p.segments.push(RawSegment {
+                span_styles: span_stack.iter().map(|(_, n)| n.clone()).collect(),
+                text: std::mem::take(seg_buf),
+            });
+        } else {
+            seg_buf.clear();
+        }
+    }
     // 미지원 서브트리 스킵 깊이 (0 = 스킵 아님).
     let mut skip_depth = 0usize;
 
@@ -348,15 +411,19 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
                     continue;
                 }
                 if para.is_some() {
+                    if local_name(e.name().as_ref()) == b"span" {
+                        flush_segment(&mut para, &span_stack, &mut seg_buf);
+                        if let Some(name) = attr_local(&e, "style-name") {
+                            span_stack.push((para_depth + 1, name));
+                        }
+                    }
                     para_depth += 1;
                 } else {
                     match local_name(e.name().as_ref()) {
                         b"automatic-styles" => in_automatic = true,
                         b"paragraph-properties" => {
-                            if let Some(align) = read_para_align(&e) {
-                                if let Some((_, style)) = &mut current_style {
-                                    style.props.align = Some(align);
-                                }
+                            if let Some((_, style)) = &mut current_style {
+                                apply_para_props(&e, &mut style.props);
                             }
                         }
                         b"tab-stops" => {
@@ -379,12 +446,20 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
                             }
                         }
                         // text:h(제목)는 text:p와 같은 문단 흐름이다.
-                        b"p" | b"h" => {
+                        tag @ (b"p" | b"h") => {
                             para = Some(RawParagraph {
                                 style_name: attr_local(&e, "style-name"),
-                                text: String::new(),
+                                outline_level: (tag == b"h").then(|| {
+                                    attr_local(&e, "outline-level")
+                                        .and_then(|v| v.parse().ok())
+                                        .unwrap_or(1)
+                                }),
+                                segments: Vec::new(),
                             });
                             para_depth = 1;
+                            span_stack.clear();
+                            seg_buf.clear();
+                            last_was_space = true;
                         }
                         _ => {}
                     }
@@ -397,41 +472,41 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
                     *content.unsupported.entry(kind.to_string()).or_default() += 1;
                 }
                 // 빈 문단(<text:p/>) — LO에서 한 행을 차지하므로 보존한다.
-                b"p" | b"h" if para.is_none() => {
+                tag @ (b"p" | b"h") if para.is_none() => {
                     content.paragraphs.push(RawParagraph {
                         style_name: attr_local(&e, "style-name"),
-                        text: String::new(),
+                        outline_level: (tag == b"h").then(|| {
+                            attr_local(&e, "outline-level")
+                                .and_then(|v| v.parse().ok())
+                                .unwrap_or(1)
+                        }),
+                        segments: Vec::new(),
                     });
                 }
                 b"font-face" => read_font_face(&e, &mut content.automatic_styles.font_faces),
                 b"text-properties" => {
                     if let Some((_, style)) = &mut current_style {
-                        // 문단 속성(align/tab_stops)은 별도 요소에서 오므로 보존.
-                        let align = style.props.align;
-                        let tabs = style.props.tab_stops.take();
-                        style.props = read_text_props(&e);
-                        style.props.align = style.props.align.or(align);
-                        style.props.tab_stops = tabs;
+                        // 병합 — 문단 속성(align/tabs/margins)은 보존된다.
+                        style.props = style.props.overridden_by(&read_text_props(&e));
                     }
                 }
                 b"paragraph-properties" => {
-                    if let Some(align) = read_para_align(&e) {
-                        if let Some((_, style)) = &mut current_style {
-                            style.props.align = Some(align);
-                        }
+                    if let Some((_, style)) = &mut current_style {
+                        apply_para_props(&e, &mut style.props);
                     }
                 }
                 b"s" => {
-                    if let Some(p) = &mut para {
+                    if para.is_some() {
                         let count: usize = attr_local(&e, "c")
                             .and_then(|v| v.parse().ok())
                             .unwrap_or(1);
-                        p.text.extend(std::iter::repeat_n(' ', count));
+                        seg_buf.extend(std::iter::repeat_n(' ', count));
+                        last_was_space = false;
                     }
                 }
                 b"tab" => {
-                    if let Some(p) = &mut para {
-                        p.text.push('\t');
+                    if para.is_some() {
+                        seg_buf.push('\t');
                     }
                 }
                 b"tab-stop" => {
@@ -442,8 +517,8 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
                     }
                 }
                 b"line-break" => {
-                    if let Some(p) = &mut para {
-                        p.text.push('\n');
+                    if para.is_some() {
+                        seg_buf.push('\n');
                     }
                 }
                 _ => {}
@@ -452,8 +527,43 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
                 if skip_depth > 0 {
                     continue;
                 }
-                if let Some(p) = &mut para {
-                    p.text.push_str(&t.decode()?);
+                if para.is_some() {
+                    // 문자 데이터의 연속 공백은 스팬 경계를 넘어 1개로 병합한다.
+                    for ch in t.decode()?.chars() {
+                        if matches!(ch, ' ' | '\t' | '\n' | '\r') {
+                            if !last_was_space {
+                                seg_buf.push(' ');
+                                last_was_space = true;
+                            }
+                        } else {
+                            seg_buf.push(ch);
+                            last_was_space = false;
+                        }
+                    }
+                }
+            }
+            // 엔티티/문자 참조 (&lt; &#65; ...) — quick-xml이 Text와 분리해
+            // 방출하므로 여기서 문자로 복원한다. 공백 문자는 병합 대상이 아니다
+            // (참조로 쓴 공백은 의도된 공백).
+            Event::GeneralRef(r) => {
+                if skip_depth > 0 || para.is_none() {
+                    continue;
+                }
+                let ch = if let Ok(Some(c)) = r.resolve_char_ref() {
+                    Some(c)
+                } else {
+                    match r.decode()?.as_ref() {
+                        "lt" => Some('<'),
+                        "gt" => Some('>'),
+                        "amp" => Some('&'),
+                        "apos" => Some('\''),
+                        "quot" => Some('"'),
+                        _ => None, // 미지 엔티티는 버린다 (DTD 미지원)
+                    }
+                };
+                if let Some(ch) = ch {
+                    seg_buf.push(ch);
+                    last_was_space = false;
                 }
             }
             Event::End(e) => {
@@ -462,8 +572,15 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
                     continue;
                 }
                 if para.is_some() {
+                    if let Some((open_depth, _)) = span_stack.last() {
+                        if *open_depth == para_depth {
+                            flush_segment(&mut para, &span_stack, &mut seg_buf);
+                            span_stack.pop();
+                        }
+                    }
                     para_depth -= 1;
                     if para_depth == 0 {
+                        flush_segment(&mut para, &span_stack, &mut seg_buf);
                         content.paragraphs.push(para.take().unwrap());
                     }
                 } else {

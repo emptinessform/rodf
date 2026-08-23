@@ -20,20 +20,35 @@ pub struct CoverageNote {
     pub count: usize,
 }
 
-/// 파싱된 문단 하나. 텍스트와 해석 완료된 스타일을 보관한다.
+/// 문단 내 한 스팬 — 문자 스타일이 적용된 연속 텍스트.
+#[derive(Debug, Clone)]
+pub struct Span {
+    pub text: String,
+    pub style: ResolvedTextStyle,
+}
+
+/// 파싱된 문단 하나. 스팬 시퀀스와 문단 수준 스타일을 보관한다.
 #[derive(Debug, Clone)]
 pub struct Paragraph {
     text: String,
+    spans: Vec<Span>,
     style: ResolvedTextStyle,
 }
 
 impl Paragraph {
+    /// 전체 텍스트 (스팬 연결).
     pub fn text(&self) -> &str {
         &self.text
     }
 
+    /// 문단 수준 해석 스타일 (정렬·탭 스톱 등; 텍스트 속성은 스팬 기준).
     pub fn style(&self) -> &ResolvedTextStyle {
         &self.style
+    }
+
+    /// 문자 스타일이 해석된 스팬 시퀀스. 스팬 없는 문단은 단일 스팬.
+    pub fn spans(&self) -> &[Span] {
+        &self.spans
     }
 }
 
@@ -82,9 +97,35 @@ impl Document {
         let paragraphs = content
             .paragraphs
             .into_iter()
-            .map(|p| Paragraph {
-                style: resolver.resolve(p.style_name.as_deref()),
-                text: p.text,
+            .map(|p| {
+                let para_style = resolver.resolve(p.style_name.as_deref(), p.outline_level);
+                let mut spans: Vec<Span> = p
+                    .segments
+                    .iter()
+                    .map(|seg| Span {
+                        style: if seg.span_styles.is_empty() {
+                            para_style.clone()
+                        } else {
+                            resolver.resolve_span(
+                                p.style_name.as_deref(),
+                                p.outline_level,
+                                &seg.span_styles,
+                            )
+                        },
+                        text: seg.text.clone(),
+                    })
+                    .collect();
+                if spans.is_empty() {
+                    spans.push(Span {
+                        text: String::new(),
+                        style: para_style.clone(),
+                    });
+                }
+                Paragraph {
+                    text: spans.iter().map(|s| s.text.as_str()).collect(),
+                    spans,
+                    style: para_style,
+                }
             })
             .collect();
         let mut coverage_notes: Vec<CoverageNote> = content_unsupported

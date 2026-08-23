@@ -176,6 +176,7 @@ rmcf(런타임)와 상호보완, 메트릭 JSON 스펙을 rmcf 데이터 포맷�
 | D12 | 용어 | MCFS / 크레이트 `rmcf` ("FSL"은 한/글 용어, 참조만) |
 | — | 저장소·라이선스 | emptinessform/rodf 공개, MIT OR Apache-2.0 듀얼 |
 | D13 | M2 착수 방향 | 기능 확장(M3)보다 **rlayout 승격 우선** (2026-08-23). 전략: rdocx-layout에서 추출하지 않고 **rodf 워크스페이스에 `crates/rlayout` 신규 작성**(rpptx 선례) — oxml-layout 위의 중립 문서 IR + 플로우 엔진, LO 관례가 기본값(font-natural sentinel·MappingLoss 소멸). 완료 기준: 스코어보드 10/10 유지 + rodf 의존에서 rdocx-oxml/rdocx-layout 제거. 안정 후 시리즈 공용 위치로 이동. 포크 동시 세션 충돌 회피 겸용 |
+| D14 | ODF 텍스트 모델 실측 3건 (2026-08-23, space.odt 오라클) | ① **공백 병합**: 문자 데이터의 연속 공백은 스팬 경계를 넘어 1개로 병합, 문단 선두 공백 제거, `text:s`는 무조건 방출+병합 상태 리셋(뒤 리터럴 공백 생존). ② **LO 내장 Heading**: 스타일 미정의 text:h는 Liberation Sans 14pt×배율(H1 130%)·bold·위 0.42cm/아래 0.21cm — 문서 정의가 항상 이김(default ← builtin ← chain 순). ③ **LO 프로그램 기본 탭 간격 = 2cm**(1.25cm 아님 — LO 저장 문서가 1.25cm를 명시할 뿐). 부수 결함 2건 수정: quick-xml 0.41 GeneralRef(엔티티) 소실, self-closing paragraph-properties의 tab-stop-distance 미파싱(폴백=문서값 우연 일치로 은폐돼 있었음) |
 | — | 업스트림 관계 | **독립 라인 유지, tensorbee PR 보류.** 포크(svg-poc-0.8)는 자체 커밋이 쌓인 독립 엔진 라인 — PR 하나로 포크 의존이 해소되지 않아 실익 없음. 재검토 조건: ① 업스트림 추종 전략 전환 시 ② 기여 자체가 목적일 때 |
 
 ---
