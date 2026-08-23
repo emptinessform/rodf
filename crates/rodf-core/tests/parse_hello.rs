@@ -25,7 +25,7 @@ fn first_paragraph_resolves_automatic_style() {
     let style = p.style();
     assert_eq!(style.font_size_pt, Some(24.0));
     assert!(style.bold);
-    assert_eq!(style.font_family.as_deref(), Some("Malgun Gothic"));
+    assert_eq!(style.font_family.as_deref(), Some("맑은 고딕"));
 }
 
 #[test]
