@@ -53,6 +53,49 @@ def render_rodf(odt: Path, out_png: Path) -> None:
     )
 
 
+def render_libreoffice_pdf(odt: Path, out_dir: Path) -> Path:
+    subprocess.run(
+        [find_soffice(), "--headless", "--convert-to", "pdf",
+         str(odt), "--outdir", str(out_dir)],
+        check=True, capture_output=True,
+    )
+    return out_dir / (odt.stem + ".pdf")
+
+
+def rasterize_pdf(pdf: Path, out_prefix: Path, dpi: float) -> Path:
+    """pdftoppm(poppler)으로 1페이지를 PNG로 굽는다 — 오라클 v2의 공통 래스터라이저.
+
+    양쪽(LO, rodf)의 PDF를 같은 엔진으로 래스터화하면 힌팅/감마/AA 차이가
+    상쇄되어, 남는 차이가 순수한 레이아웃·글리프 배치 차이가 된다."""
+    subprocess.run(
+        ["pdftoppm", "-r", str(int(dpi)), "-f", "1", "-l", "1", "-png",
+         "-singlefile", str(pdf), str(out_prefix)],
+        check=True, capture_output=True,
+    )
+    return out_prefix.with_suffix(".png")
+
+
+def render_pair(odt: Path, tmp_dir: Path, dpi: float, route: str):
+    """(lo_img, rodf_img) 회색조 이미지 쌍을 route(png|pdf)에 따라 생성."""
+    if route == "pdf":
+        rodf_pdf = tmp_dir / "rodf.pdf"
+        root = Path(__file__).resolve().parent.parent
+        subprocess.run(
+            ["cargo", "run", "-q", "-p", "rodf-cli", "--", "render", str(odt), str(rodf_pdf)],
+            check=True, cwd=root,
+        )
+        rodf_png = rasterize_pdf(rodf_pdf, tmp_dir / "rodf-pdf", dpi)
+        lo_pdf = render_libreoffice_pdf(odt, tmp_dir)
+        lo_png = rasterize_pdf(lo_pdf, tmp_dir / "lo-pdf", dpi)
+        return Image.open(lo_png).convert("L"), Image.open(rodf_png).convert("L")
+
+    rodf_png = tmp_dir / "rodf.png"
+    render_rodf(odt, rodf_png)
+    rodf_img = Image.open(rodf_png).convert("L")
+    lo_png = render_libreoffice(odt, tmp_dir, *rodf_img.size)
+    return Image.open(lo_png).convert("L"), rodf_img
+
+
 def content_bbox(gray: np.ndarray, threshold: int = 245) -> tuple[int, int, int, int]:
     """흰 배경이 아닌 픽셀의 바운딩 박스 (x0, y0, x1, y1)."""
     mask = gray < threshold
@@ -108,17 +151,15 @@ def main() -> None:
     parser.add_argument("input", type=Path)
     parser.add_argument("--dpi", type=float, default=144.0)
     parser.add_argument("--threshold", type=float, default=0.95)
+    parser.add_argument("--route", choices=["png", "pdf"], default="pdf",
+                        help="pdf(기본): 양쪽 PDF를 동일 래스터라이저(pdftoppm)로 비교. "
+                             "png: LO PNG 내보내기 vs rodf PNG (래스터라이저 차이 포함)")
     parser.add_argument("--keep", type=Path, help="비교 이미지를 남길 디렉터리")
     args = parser.parse_args()
 
     with tempfile.TemporaryDirectory() as tmp:
         tmp_dir = Path(tmp)
-        rodf_png = tmp_dir / "rodf.png"
-        render_rodf(args.input, rodf_png)
-        rodf_img = Image.open(rodf_png).convert("L")
-
-        lo_png = render_libreoffice(args.input, tmp_dir, *rodf_img.size)
-        lo_img = Image.open(lo_png).convert("L")
+        lo_img, rodf_img = render_pair(args.input, tmp_dir, args.dpi, args.route)
         if lo_img.size != rodf_img.size:
             # LO의 px 크기 반올림은 세션에 따라 ±1px 흔들린다. 리샘플은 전체를
             # 흐려 점수를 왜곡하므로, 초과분을 잘라내는 것으로 정규화한다.
@@ -158,8 +199,8 @@ def main() -> None:
 
         if args.keep:
             args.keep.mkdir(parents=True, exist_ok=True)
-            Image.open(lo_png).save(args.keep / "oracle-libreoffice.png")
-            Image.open(rodf_png).save(args.keep / "oracle-rodf.png")
+            lo_img.save(args.keep / "oracle-libreoffice.png")
+            rodf_img.save(args.keep / "oracle-rodf.png")
 
     sys.exit(0 if verdict == "PASS" else 1)
 

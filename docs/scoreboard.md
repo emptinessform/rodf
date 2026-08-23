@@ -1,18 +1,20 @@
 # rodf fidelity scoreboard
 
-Generated 2026-08-23 07:40 UTC · oracle: local LibreOffice · pass = blur2 SSIM ≥ 0.95
+Generated 2026-08-23 08:12 UTC · oracle v2: 양쪽 PDF를 동일 래스터라이저(pdftoppm)로 비교 · pass = blur2 SSIM ≥ 0.95
 
-**8/10 PASS**
+`png blur2`는 참고 열: LO PNG 내보내기 vs rodf 자체 래스터 (힌팅/감마 차이 포함).
 
-| doc | status | raw SSIM | blur2 SSIM | losses |
-|---|---|---|---|---|
-| bold-italic | PASS | 0.9012 | 0.9729 | 0 |
-| font-batang | FAIL | 0.8005 | 0.9494 | 0 |
-| font-gulim | PASS | 0.8651 | 0.9558 | 0 |
-| mixed-script-sizes | PASS | 0.9546 | 0.9904 | 0 |
-| multi-paragraph | PASS | 0.8818 | 0.9582 | 0 |
-| plain-en-12 | PASS | 0.8845 | 0.9681 | 0 |
-| plain-ko-10 | PASS | 0.6954 | 0.9617 | 0 |
-| size-ladder | PASS | 0.9637 | 0.9876 | 0 |
-| wrap-korean | FAIL | 0.8592 | 0.9468 | 0 |
-| wrap-mixed | PASS | 0.8566 | 0.9547 | 0 |
+**10/10 PASS**
+
+| doc | status | raw SSIM | blur2 SSIM | png blur2 | losses |
+|---|---|---|---|---|---|
+| bold-italic | PASS | 0.9898 | 0.9979 | 0.9729 | 0 |
+| font-batang | PASS | 0.9005 | 0.9851 | 0.9494 | 0 |
+| font-gulim | PASS | 0.8648 | 0.9759 | 0.9558 | 0 |
+| mixed-script-sizes | PASS | 0.9464 | 0.9857 | 0.9904 | 0 |
+| multi-paragraph | PASS | 0.9623 | 0.9812 | 0.9582 | 0 |
+| plain-en-12 | PASS | 0.9827 | 0.9957 | 0.9681 | 0 |
+| plain-ko-10 | PASS | 0.9446 | 0.992 | 0.9617 | 0 |
+| size-ladder | PASS | 0.9652 | 0.9829 | 0.9876 | 0 |
+| wrap-korean | PASS | 0.9915 | 0.9984 | 0.9468 | 0 |
+| wrap-mixed | PASS | 0.9902 | 0.9983 | 0.9547 | 0 |

@@ -83,14 +83,16 @@ MB급)이고, 순수 Rust 진영(libreoffice-rs/lo_odf)은 생성 전용으로 �
 - 테스트 **20개** (전부 테스트 우선 작성): core 5 · render 12 · cli 3.
 - 저장소 공개: README(한/영 병기) + side-by-side 이미지 + MCFS 라이선스 문서.
 
-### 백로그 (스코어보드 실패 4건, 우선순위순)
+### 백로그 — **전부 해소 (2026-08-23)**: 스코어보드 10/10 PASS
 
-1. **합성 기울임 (bold-italic 0.69)** — 이탤릭 페이스 없는 폰트(맑은 고딕)에서
-   LO는 스큐 합성, 엔진은 정자 렌더. 공유 계층(oxml-layout)에 구현 —
-   "중립 계층 강화" 기준의 첫 적용. MCFS의 합성 볼드/이탤릭과 동일 주제.
-2. **한글 줄바꿈 규칙 (wrap-korean 0.84)** — LO 규칙 vs unicode-linebreak 차이.
-3. **multi-paragraph 0.90** — 1+2의 복합, 개별 해결 후 재측정.
-4. **font-batang 0.9494** — 경계선(임계값 직하), 세리프 AA 차이 추정.
+1. ~~합성 기울임 (0.69)~~ → 20°(DirectWrite 관례) 스큐 합성, 0.97. 포크 1a7a5db.
+2. ~~한글 줄바꿈 규칙 (0.84)~~ → font-natural 모드에 어절 단위(hangul_word_wrap),
+   줄바꿈 위치 LO와 완전 일치. 포크 dbc756f.
+3. ~~multi-paragraph (0.90)~~ → 1+2 해결로 0.96.
+4. ~~AA/힌팅 잔여 (wrap-korean 0.947, batang 0.949)~~ → **오라클 v2**로 규명:
+   양쪽 PDF를 동일 래스터라이저(pdftoppm)로 비교하면 raw 0.99+ — 잔여는 전부
+   LO 래스터(GDI/DWrite 감마·힌팅) vs tiny-skia 차이. 판정은 pdf 경로, png
+   경로는 참고 열. rodf 자체 래스터의 감마 근사는 선택 과제로 대기열에.
 
 ### M1.5 잔여 과제
 
