@@ -1,53 +1,53 @@
 {
-  "generated": "2026-08-23 09:12 UTC",
+  "generated": "2026-08-23 09:37 UTC",
   "threshold": 0.95,
   "results": [
     {
       "doc": "bold-italic",
       "losses": 0,
-      "raw": 0.7473,
-      "blur2": 0.9245,
-      "png_blur2": null,
-      "status": "FAIL"
+      "raw": 0.9708,
+      "blur2": 0.9902,
+      "png_blur2": 0.9521,
+      "status": "PASS"
     },
     {
       "doc": "font-batang",
       "losses": 0,
-      "raw": 0.9736,
-      "blur2": 0.9923,
-      "png_blur2": null,
+      "raw": 0.9913,
+      "blur2": 0.9962,
+      "png_blur2": 0.9798,
       "status": "PASS"
     },
     {
       "doc": "font-gulim",
       "losses": 0,
-      "raw": 0.8547,
-      "blur2": 0.9573,
-      "png_blur2": null,
+      "raw": 0.9021,
+      "blur2": 0.9765,
+      "png_blur2": 0.9588,
       "status": "PASS"
     },
     {
       "doc": "mixed-script-sizes",
       "losses": 0,
-      "raw": 0.9446,
-      "blur2": 0.9824,
-      "png_blur2": null,
+      "raw": 0.9546,
+      "blur2": 0.9841,
+      "png_blur2": 0.9829,
       "status": "PASS"
     },
     {
       "doc": "multi-paragraph",
       "losses": 0,
-      "raw": 0.7397,
-      "blur2": 0.7965,
-      "png_blur2": null,
+      "raw": 0.8857,
+      "blur2": 0.9201,
+      "png_blur2": 0.9106,
       "status": "FAIL"
     },
     {
       "doc": "plain-en-12",
       "losses": 0,
-      "raw": 0.9709,
-      "blur2": 0.9885,
-      "png_blur2": null,
+      "raw": 0.9787,
+      "blur2": 0.9927,
+      "png_blur2": 0.9754,
       "status": "PASS"
     },
     {
@@ -55,32 +55,32 @@
       "losses": 0,
       "raw": 0.9129,
       "blur2": 0.9886,
-      "png_blur2": null,
+      "png_blur2": 0.9726,
       "status": "PASS"
     },
     {
       "doc": "size-ladder",
       "losses": 0,
-      "raw": 0.9836,
-      "blur2": 0.9956,
-      "png_blur2": null,
+      "raw": 0.9884,
+      "blur2": 0.9974,
+      "png_blur2": 0.9867,
       "status": "PASS"
     },
     {
       "doc": "wrap-korean",
       "losses": 0,
-      "raw": 0.7872,
-      "blur2": 0.8592,
-      "png_blur2": null,
-      "status": "FAIL"
+      "raw": 0.8858,
+      "blur2": 0.9799,
+      "png_blur2": 0.9843,
+      "status": "PASS"
     },
     {
       "doc": "wrap-mixed",
       "losses": 0,
-      "raw": 0.6051,
-      "blur2": 0.6948,
-      "png_blur2": null,
-      "status": "FAIL"
+      "raw": 0.9088,
+      "blur2": 0.9648,
+      "png_blur2": 0.9807,
+      "status": "PASS"
     }
   ]
 }

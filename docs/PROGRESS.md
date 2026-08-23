@@ -29,11 +29,14 @@
 
 ### 2026-08-23
 
-- ✅ **오라클 결정론 (M1.5 잔여)** — oracle/Dockerfile: rust 1.95 + Debian
-  bookworm 고정 LO 7.4.7 + Noto CJK KR + poppler 22.12. 코퍼스를 컨테이너
-  안에서 noto 폰트 셋으로 생성(gen_corpus --font-set) → 호스트 무관 재현.
-  주간 CI(oracle.yml) + 로컬 Docker 실검증. png 참고 열은 환경 결측 허용.
-  **noto 프로파일 첫 스코어보드 6/10** — FAIL 4건은 신규 발견(대기열 등재).
+- ✅ **오라클 결정론 (M1.5 잔여)** — oracle/Dockerfile: rust 1.95 + **TDF
+  아카이브 LO 26.2.1.2 버전 고정**(호스트와 동일 버전 — 프로파일 간 비교
+  가능) + Noto CJK KR + poppler 22.12. 코퍼스를 컨테이너 안에서 noto 폰트
+  셋으로 생성(gen_corpus --font-set) → 호스트 무관 재현. 주간 CI(oracle.yml)
+  + 로컬 Docker 실검증. png 참고 열은 환경 결측 허용.
+  **noto 프로파일 9/10 PASS.** 교훈: bookworm 기본 LO 7.4(2022)로 첫 실행 시
+  6/10이었는데 구식 Type1 서브세터·구 한글 동작이 원인 — 배포판 LO가 아니라
+  타깃 세대의 LO를 고정해야 한다.
   로컬 실행: docker run -v <repo>:/work -v rodf-oracle-target:/tmp/target rodf-oracle
 - ✅ **M2: rlayout 승격 (D13)** — 중립 문서 IR + 문단 플로우 엔진
   `crates/rlayout` 신규(oxml-layout 직결, LO/ODF 관례 기본값). rodf-render를
