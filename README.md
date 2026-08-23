@@ -25,7 +25,7 @@ ZetaOffice는 스위트 전체를 WASM으로 포팅하고(수백 MB), 순수 Rus
 > that parses ODT and renders it faithfully to PDF/PNG, with **Korean typography as a
 > first-class requirement**.
 
-## 현황 / Status: early (M1 진행 중)
+## 현황 / Status: M0·M1·M2 완료, M1.5 진행 중 (early)
 
 텍스트 문서에 대해 `rodf render in.odt out.pdf`가 오늘 동작합니다:
 
@@ -34,31 +34,34 @@ ZetaOffice는 스위트 전체를 WASM으로 포팅하고(수백 MB), 순수 Rus
   동아시아(`style:*-asian`) 속성을 분리 유지해, 한글·라틴 혼합 텍스트가
   문자 체계별 올바른 크기와 굵기로 렌더됩니다
 - master-page 페이지 기하 (페이지 크기, 여백)
-- [rdocx](https://github.com/tensorbee/rdocx) 레이아웃 엔진을 통한 렌더링
-  (어댑터 방식), PDF·PNG 출력
+- 포맷 중립 엔진(`rlayout`)을 통한 렌더링 — LO/ODF 관례(폰트 자연 행간,
+  한글 어절 줄바꿈, 합성 기울임)가 기본값, PDF·PNG 출력
 
 > `rodf render in.odt out.pdf` works for text documents today: ODT package parsing,
 > automatic/named/default style chain resolution with Western (`fo:*`) and East Asian
 > (`style:*-asian`) properties kept separate — mixed Korean/Latin text renders at its
 > correct per-script size and weight — master-page geometry, and rendering through the
-> rdocx layout engine (adapter approach) to PDF and PNG.
+> format-neutral `rlayout` engine (font-natural line heights, Korean word wrap, and
+> synthetic oblique are the defaults) to PDF and PNG.
 
 LibreOffice(왼쪽) vs rodf(오른쪽), 같은 `hello.odt`:
 
 ![LibreOffice vs rodf side-by-side](docs/side-by-side.png)
 
-모든 변경은 **LibreOffice 오라클**로 판정합니다 — `tools/oracle.py`가 같은 문서를
-headless LibreOffice로 렌더해, ±2px 정합 후 콘텐츠 크롭 SSIM(blur2 기준 ≥ 0.95)으로
-판정합니다. **M1 기준 달성**: hello 픽스처 blur2 **0.983** (raw 0.921), 굴림
-lineGap 픽스처 blur2 **0.976** — 한글/라틴 문자체계별 크기·굵기, A4 페이지 기하,
-hhea lineGap(행 위 배치)까지 LibreOffice와 정렬된 상태입니다.
+모든 변경은 **LibreOffice 오라클**로 판정합니다 — 양쪽을 PDF로 내보내 동일
+래스터라이저(pdftoppm)로 굽고, ±2px 정합 후 콘텐츠 크롭 SSIM(blur2 ≥ 0.95)으로
+판정합니다(오라클 v2 — 힌팅/감마 변수를 상쇄해 순수 레이아웃 충실도를 측정).
+현재 [기능 매트릭스 코퍼스 10문서 전부 PASS](docs/scoreboard.md) — 문자체계별
+크기·굵기, 페이지 기하, hhea lineGap(행 위 배치), 한글 어절 줄바꿈, 합성
+기울임까지 LibreOffice와 정렬된 상태입니다.
 
-> Every change is judged against a **LibreOffice oracle** — `tools/oracle.py` renders
-> the same document through headless LibreOffice, registers within ±2px, and scores a
-> content-cropped SSIM (pass = blur2 ≥ 0.95). **M1 criterion met**: hello fixture
-> blur2 **0.983** (raw 0.921), Gulim lineGap fixture blur2 **0.976** — per-script
-> size/weight, A4 page geometry, and hhea lineGap (seated above the line) all align
-> with LibreOffice.
+> Every change is judged against a **LibreOffice oracle**: both sides export PDF, a
+> single rasterizer (pdftoppm) renders them, and a content-cropped SSIM after ±2px
+> registration must reach 0.95 at blur radius 2 (oracle v2 — cancelling hinting/gamma
+> so the score measures pure layout fidelity). The whole 10-document feature-matrix
+> corpus currently [passes](docs/scoreboard.md) — per-script size/weight, page
+> geometry, hhea lineGap seated above the line, Korean word wrap, and synthetic
+> oblique all align with LibreOffice.
 
 ## 핵심 방향: MCFS / Key direction: MCFS (Metric-Compatible Font Substitution)
 
@@ -108,30 +111,31 @@ mcfg의 메트릭 JSON 스펙을 데이터 포맷으로 활용하는 것을 검�
 | Crate | 역할 / Role |
 |---|---|
 | `rodf-core` | ODF 패키지 + 문서 모델 + 스타일 해석 (zip + quick-xml만) / ODF package + document model + style resolution (zip + quick-xml only) |
-| `rodf-render` | ODF → 레이아웃 엔진 어댑터, PDF/PNG 출력, 매핑 손실 추적 / ODF → layout-engine adapter, PDF/PNG output, mapping-loss tracking |
+| `rlayout` | 포맷 중립 문서 IR + 플로우 엔진 — 통합 뷰어의 공통 기반 / format-neutral document IR + flow engine, the shared base for the unified viewer |
+| `rodf-render` | ODF → 중립 IR 매핑, PDF/PNG 출력 / ODF → neutral-IR mapping, PDF/PNG output |
 | `rodf-cli` | `rodf render in.odt out.{pdf,png}` |
 
 ## 로드맵 / Roadmap
 
-- **M1** — 단일 문단 충실도: 파싱 → 렌더 → 오라클 SSIM ≥ 0.95
+- **M1** ✅ — 단일 문단 충실도: 파싱 → 렌더 → 오라클 SSIM ≥ 0.95
   / single-paragraph fidelity: parse → render → oracle SSIM ≥ 0.95
 - **M1.5** — 오라클 코퍼스(공개 ODT 50–100개) + LibreOffice 버전 고정 Docker CI
   / oracle corpus (50–100 public ODT files) + pinned-LibreOffice Docker CI
-- **M2** — 포맷 중립 레이아웃 엔진 작업 (어댑터의 매핑 손실 목록이 계속 어댑터로
-  갈지, rodf 전용 플로우 엔진을 만들지 결정)
-  / format-neutral layout engine work (the adapter's mapping-loss list decides
-  whether rodf keeps adapting or gets its own flow engine)
+- **M2** ✅ — 포맷 중립 엔진 `rlayout` — 문서 IR + 플로우 엔진, DOCX 모델 의존
+  소멸, 통합 뷰어의 공통 기반
+  / format-neutral `rlayout` engine — document IR + flow engine, DOCX-model
+  dependency gone, the shared base for the unified viewer
 - **M2.5** — 공개 충실도 대시보드 "Are we ODF yet?" / public fidelity dashboard
 - **M3+** — 표, 이미지, 머리글/바닥글, SVG 백엔드, ODS/ODP, WASM/npm
   / tables, images, headers/footers, SVG backend, ODS/ODP, WASM/npm
 
 ## 설계 문서 / Design doc
 
-설계·아키텍처·결정 대장(D1~D12)·세션 기록은 [docs/DESIGN.md](docs/DESIGN.md)에서
+설계·아키텍처·결정 대장(D1~D13)·세션 기록은 [docs/DESIGN.md](docs/DESIGN.md)에서
 관리합니다 — 이 프로젝트의 "왜"가 담긴 정본입니다. 진행 단계(지금 작업·대기열·
 완료 기록)는 [docs/PROGRESS.md](docs/PROGRESS.md)에서 추적합니다.
 
-> Design, architecture, the decision ledger (D1–D12), and session records live in
+> Design, architecture, the decision ledger (D1–D13), and session records live in
 > [docs/DESIGN.md](docs/DESIGN.md) — the canonical record of this project's "why".
 > Execution (current work, queue, done log) is tracked in
 > [docs/PROGRESS.md](docs/PROGRESS.md).
@@ -139,7 +143,7 @@ mcfg의 메트릭 JSON 스펙을 데이터 포맷으로 활용하는 것을 검�
 ## 개발 / Development
 
 ```sh
-cargo test --workspace          # 테스트 18개, 전부 테스트 우선 작성 / 18 tests, all written test-first
+cargo test --workspace          # 테스트 26개, 전부 테스트 우선 작성 / 26 tests, all written test-first
 cargo run -p rodf-cli -- render crates/rodf-core/tests/fixtures/hello.odt out.pdf
 python tools/oracle.py crates/rodf-core/tests/fixtures/hello.odt   # LibreOffice 필요 / needs LibreOffice
 ```

@@ -1,18 +1,16 @@
 [package]
 name = "rodf-render"
-description = "ODF -> rdocx layout engine adapter (path-alpha) and render pipeline"
+description = "ODF -> neutral rlayout IR mapping and render pipeline"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
 
 [dependencies]
 rodf-core.workspace = true
+rlayout.workspace = true
 thiserror.workspace = true
-rdocx-layout.workspace = true
-rdocx-oxml.workspace = true
 oxml-layout.workspace = true
 oxml-pdf.workspace = true
-oxml-drawing.workspace = true
 
 [dev-dependencies]
 png = "0.18"

@@ -1,14 +1,14 @@
-//! rodf-render — ODF 문서 모델을 rdocx 레이아웃 엔진 입력으로 매핑(경로 α)하고
-//! PDF/PNG를 생성한다. DOCX 모델이 표현하지 못하는 ODF 의미론은
-//! [`MappingLoss`]로 수집한다 — 이 목록이 경로 β 전환 판단의 데이터가 된다.
+//! rodf-render — ODF 문서 모델을 중립 IR(rlayout)로 매핑해 배치하고
+//! PDF/PNG를 생성한다 (M2, D13: 경로 α의 DOCX 모델 어댑터를 대체).
+//!
+//! rlayout은 LO/ODF 관례(폰트 자연 행간, gap 위 배치, 한글 어절 줄바꿈)가
+//! 기본값이므로 Word 에뮬레이션을 우회하는 sentinel이 필요 없다.
+//! [`MappingLoss`]는 IR이 표현하지 못하는 ODF 의미론을 만났을 때 기록하는
+//! 자리로 유지된다 (네이티브 IR 전환으로 현재는 발생 항목 없음).
 
-use std::collections::HashMap;
-
-use rdocx_layout::{layout_document, LayoutInput, RevisionView};
-use rdocx_oxml::{CT_Document, CT_P, CT_SectPr, CT_Styles, HalfPoint, Twips};
 use rodf_core::Document;
 
-/// 어댑터가 보존하지 못한 ODF 의미론 하나.
+/// 렌더 경로가 보존하지 못한 ODF 의미론 하나.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MappingLoss {
     /// 무엇을 잃었는가 (예: "master-page").
@@ -47,58 +47,46 @@ impl Rendered {
     }
 }
 
-/// ODF 문서를 rdocx 엔진 입력으로 매핑한다 (경로 α 어댑터).
-/// 렌더 전 입력을 검사·수정하려는 호출자를 위해 공개한다.
-pub fn to_layout_input(doc: &Document) -> (LayoutInput, Vec<MappingLoss>) {
-    let mut losses = Vec::new();
+/// A4 폴백 (문서에 master-page가 없을 때).
+const FALLBACK_PAGE: rlayout::PageGeometry = rlayout::PageGeometry {
+    width_pt: 595.3,
+    height_pt: 841.9,
+    margin_top_pt: 56.7,
+    margin_right_pt: 56.7,
+    margin_bottom_pt: 56.7,
+    margin_left_pt: 56.7,
+};
 
-    let mut docx = CT_Document::new();
-    for paragraph in doc.paragraphs() {
-        docx.body.add_paragraph(map_paragraph(paragraph, &mut losses));
-    }
-    if let Some(geometry) = doc.page_geometry() {
-        docx.body.sect_pr = Some(map_page_geometry(geometry));
-    }
+/// ODF 문서를 중립 IR로 매핑한다. 렌더 전 IR을 검사하려는 호출자를 위해 공개.
+pub fn to_document(doc: &Document) -> (rlayout::Document, Vec<MappingLoss>) {
+    let losses = Vec::new();
 
-    let input = LayoutInput {
-        revision_view: RevisionView::Accepted,
-        document: docx,
-        styles: CT_Styles::new_default(),
-        numbering: None,
-        headers: HashMap::new(),
-        footers: HashMap::new(),
-        images: HashMap::new(),
-        charts: HashMap::new(),
-        chart_theme: oxml_drawing::theme::CT_OfficeStyleSheet::office_default(),
-        chart_color_map: oxml_drawing::color::ColorMap::default(),
-        core_properties: None,
-        hyperlink_urls: HashMap::new(),
-        footnotes: None,
-        endnotes: None,
-        theme: None,
-        fonts: Vec::new(),
-    };
-    (input, losses)
+    let page = doc
+        .page_geometry()
+        .map(|g| rlayout::PageGeometry {
+            width_pt: g.width_pt,
+            height_pt: g.height_pt,
+            margin_top_pt: g.margin_top_pt,
+            margin_right_pt: g.margin_right_pt,
+            margin_bottom_pt: g.margin_bottom_pt,
+            margin_left_pt: g.margin_left_pt,
+        })
+        .unwrap_or(FALLBACK_PAGE);
+
+    let blocks = doc
+        .paragraphs()
+        .iter()
+        .map(|paragraph| rlayout::Block::Paragraph(map_paragraph(paragraph)))
+        .collect();
+
+    (rlayout::Document { page, blocks }, losses)
 }
 
-/// ODF 문서를 rdocx 엔진으로 레이아웃한다 (경로 α 어댑터).
+/// ODF 문서를 배치한다.
 pub fn render(doc: &Document) -> Result<Rendered, RenderError> {
-    let (input, losses) = to_layout_input(doc);
-    let layout = layout_document(&input).map_err(|e| RenderError::Layout(e.to_string()))?;
+    let (ir, losses) = to_document(doc);
+    let layout = rlayout::layout(&ir).map_err(|e| RenderError::Layout(e.to_string()))?;
     Ok(Rendered { layout, losses })
-}
-
-/// ODF master-page 기하를 DOCX 섹션 속성으로 매핑한다 (pt → twips).
-fn map_page_geometry(geometry: &rodf_core::PageGeometry) -> CT_SectPr {
-    let twips = |pt: f64| Twips((pt * 20.0).round() as i32);
-    let mut sect_pr = CT_SectPr::default_letter();
-    sect_pr.page_width = Some(twips(geometry.width_pt));
-    sect_pr.page_height = Some(twips(geometry.height_pt));
-    sect_pr.margin_top = Some(twips(geometry.margin_top_pt));
-    sect_pr.margin_right = Some(twips(geometry.margin_right_pt));
-    sect_pr.margin_bottom = Some(twips(geometry.margin_bottom_pt));
-    sect_pr.margin_left = Some(twips(geometry.margin_left_pt));
-    sect_pr
 }
 
 /// 문자 체계 — ODF의 서양(fo:*) / 동아시아(style:*-asian) 속성 구분에 대응.
@@ -163,83 +151,53 @@ pub fn split_script_runs(text: &str) -> Vec<(Script, String)> {
         if let Some((_, buf)) = runs.last_mut() {
             buf.push_str(&pending_neutral);
         }
-        // 강한 문자가 하나도 없으면(공백뿐) 런 없음 — 문단은 상위에서 처리.
     }
     runs
 }
 
-/// ODF 문단(해석 완료 스타일 포함)을 DOCX 문단으로 매핑한다.
+/// ODF 문단(해석 완료 스타일 포함)을 IR 문단으로 매핑한다.
 ///
-/// ODF 스타일 상속은 rodf-core에서 이미 flatten되어 있고, 서양/동아시아
-/// 속성 분리는 DOCX 단일 w:sz로 표현할 수 없으므로 문자 체계별로 런을
-/// 나눠 각 런에 해당 속성을 적용한다.
-fn map_paragraph(paragraph: &rodf_core::Paragraph, losses: &mut Vec<MappingLoss>) -> CT_P {
-    let mut p = CT_P::new();
+/// ODF의 서양/동아시아 속성 분리는 문자 체계별 런 분할로 표현한다 —
+/// 각 런이 해당 체계의 글꼴·크기·굵기를 갖는다.
+fn map_paragraph(paragraph: &rodf_core::Paragraph) -> rlayout::Paragraph {
     let style = paragraph.style();
-
-    // ODF/LO 기본은 문단 간격 0에 폰트 자연 행간(hhea asc+desc+lineGap,
-    // gap은 행 위에 배치). "font-natural"은 엔진의 Word 행간 에뮬레이션을
-    // 끄는 sentinel — Word Normal 기본값(1.08 행간, after-spacing)도 함께
-    // 차단한다. line_spacing 값은 Normal 스타일의 259twips를 덮기 위한
-    // 자리채움이며 font-natural 규칙에서는 무시된다.
-    {
-        let ppr = p.properties.get_or_insert_with(Default::default);
-        ppr.space_before = Some(Twips(0));
-        ppr.space_after = Some(Twips(0));
-        ppr.line_spacing = Some(Twips(240));
-        ppr.line_rule = Some("font-natural".to_string());
-    }
-
-    for (script, segment) in split_script_runs(paragraph.text()) {
-        let run = p.add_run(&segment);
-        let rpr = run.properties.get_or_insert_with(Default::default);
-
-        let (family, size_pt, bold, italic) = match script {
-            Script::Western => (
-                style.font_family.clone(),
-                style.font_size_pt,
-                style.bold,
-                style.italic,
-            ),
-            Script::Asian => (
-                style
-                    .font_family_asian
-                    .clone()
-                    .or_else(|| style.font_family.clone()),
-                style.font_size_asian_pt.or(style.font_size_pt),
-                style.bold_asian,
-                style.italic_asian,
-            ),
-        };
-
-        if let Some(family) = family {
-            rpr.font_ascii = Some(family.clone());
-            rpr.font_hansi = Some(family.clone());
-            rpr.font_east_asia = Some(family);
-        }
-        match size_pt {
-            Some(size_pt) if size_pt > 0.0 => {
-                let half_points = (size_pt * 2.0).round();
-                if (half_points - size_pt * 2.0).abs() > f64::EPSILON {
-                    losses.push(MappingLoss {
-                        what: "font-size-precision".to_string(),
-                        detail: format!("{size_pt}pt rounded to {} half-points", half_points),
-                    });
-                }
-                rpr.sz = Some(HalfPoint(half_points as u32));
+    let runs = split_script_runs(paragraph.text())
+        .into_iter()
+        .map(|(script, segment)| {
+            let (family, size_pt, bold, italic) = match script {
+                Script::Western => (
+                    style.font_family.clone(),
+                    style.font_size_pt,
+                    style.bold,
+                    style.italic,
+                ),
+                Script::Asian => (
+                    style
+                        .font_family_asian
+                        .clone()
+                        .or_else(|| style.font_family.clone()),
+                    style.font_size_asian_pt.or(style.font_size_pt),
+                    style.bold_asian,
+                    style.italic_asian,
+                ),
+            };
+            rlayout::Run {
+                text: segment,
+                style: rlayout::TextStyle {
+                    font_family: family,
+                    font_size_pt: size_pt.unwrap_or(12.0),
+                    bold,
+                    italic,
+                },
             }
-            Some(size_pt) => losses.push(MappingLoss {
-                what: "font-size-invalid".to_string(),
-                detail: format!("{size_pt}pt dropped"),
-            }),
-            None => {}
-        }
-        if bold {
-            rpr.bold = Some(true);
-        }
-        if italic {
-            rpr.italic = Some(true);
-        }
+        })
+        .collect();
+
+    rlayout::Paragraph {
+        runs,
+        align: rlayout::Align::Start,
+        space_before_pt: 0.0,
+        space_after_pt: 0.0,
+        hangul_word_wrap: None, // 기본값(true) = LO/ODF 관례
     }
-    p
 }

@@ -1,6 +1,7 @@
 [workspace]
 resolver = "3"
 members = [
+    "crates/rlayout",
     "crates/rodf-core",
     "crates/rodf-render",
     "crates/rodf-cli",
@@ -13,19 +14,17 @@ edition = "2021"
 license = "MIT OR Apache-2.0"
 
 [workspace.dependencies]
+rlayout = { path = "crates/rlayout" }
 rodf-core = { path = "crates/rodf-core" }
 rodf-render = { path = "crates/rodf-render" }
 zip = { version = "8.1", default-features = false, features = ["deflate"] }
 quick-xml = "0.41"
 thiserror = "2"
-# rdocx 레이아웃 엔진 (경로 α 어댑터가 사용).
-# font-natural line rule + synthetic italic + Korean word wrap이 필요해 포크에 rev 고정.
-# 로컬에서 포크를 고치며 작업할 때는 임시로 path 의존으로 바꿔 쓸 것:
-#   { path = "../SBDoc/rdocx-fork/crates/<crate>" }
-rdocx-layout = { git = "https://github.com/emptinessform/rdocx", rev = "1a7a5dba0677e40468d52f396fb7ee53ead5fa20" }
-rdocx-oxml = { git = "https://github.com/emptinessform/rdocx", rev = "1a7a5dba0677e40468d52f396fb7ee53ead5fa20" }
+# 중립 공유 계층 (emptinessform/rdocx 포크 모노레포 소속; rev 고정).
+# M2(D13)부터 rodf는 rdocx-layout/rdocx-oxml에 의존하지 않는다 —
+# rlayout(자체 크레이트)이 oxml-layout 위에서 직접 배치한다.
+# 로컬에서 포크를 고치며 작업할 때는 [patch]로 path 의존을 임시 사용.
 oxml-layout = { git = "https://github.com/emptinessform/rdocx", rev = "1a7a5dba0677e40468d52f396fb7ee53ead5fa20" }
 oxml-pdf = { git = "https://github.com/emptinessform/rdocx", rev = "1a7a5dba0677e40468d52f396fb7ee53ead5fa20" }
-oxml-drawing = { git = "https://github.com/emptinessform/rdocx", rev = "1a7a5dba0677e40468d52f396fb7ee53ead5fa20" }
 
 

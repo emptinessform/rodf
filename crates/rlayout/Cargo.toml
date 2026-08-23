@@ -1,0 +1,10 @@
+[package]
+name = "rlayout"
+description = "Format-neutral document IR and flow layout engine over oxml-layout"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+oxml-layout.workspace = true
+thiserror.workspace = true

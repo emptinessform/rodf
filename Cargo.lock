@@ -9,15 +9,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "320119579fcad9c21884f5c4861d16174d0e06250625266f50fe6898340abefa"
 
 [[package]]
-name = "aho-corasick"
-version = "1.1.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c982642fa9e8606056828ee9a8505737230110bb1099153c79efe865c59d12ba"
-dependencies = [
- "memchr",
-]
-
-[[package]]
 name = "arrayref"
 version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -265,36 +256,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 
 [[package]]
-name = "oxml-chart"
-version = "0.4.0"
-source = "git+https://github.com/emptinessform/rdocx?rev=1a7a5dba0677e40468d52f396fb7ee53ead5fa20#1a7a5dba0677e40468d52f396fb7ee53ead5fa20"
-dependencies = [
- "oxml-core",
- "oxml-drawing",
- "oxml-layout",
- "oxml-sml",
- "quick-xml",
-]
-
-[[package]]
-name = "oxml-core"
-version = "0.4.0"
-source = "git+https://github.com/emptinessform/rdocx?rev=1a7a5dba0677e40468d52f396fb7ee53ead5fa20#1a7a5dba0677e40468d52f396fb7ee53ead5fa20"
-dependencies = [
- "quick-xml",
- "thiserror",
-]
-
-[[package]]
-name = "oxml-drawing"
-version = "0.4.0"
-source = "git+https://github.com/emptinessform/rdocx?rev=1a7a5dba0677e40468d52f396fb7ee53ead5fa20#1a7a5dba0677e40468d52f396fb7ee53ead5fa20"
-dependencies = [
- "oxml-core",
- "quick-xml",
-]
-
-[[package]]
 name = "oxml-layout"
 version = "0.4.0"
 source = "git+https://github.com/emptinessform/rdocx?rev=1a7a5dba0677e40468d52f396fb7ee53ead5fa20#1a7a5dba0677e40468d52f396fb7ee53ead5fa20"
@@ -312,16 +273,6 @@ version = "0.4.0"
 source = "git+https://github.com/emptinessform/rdocx?rev=1a7a5dba0677e40468d52f396fb7ee53ead5fa20#1a7a5dba0677e40468d52f396fb7ee53ead5fa20"
 
 [[package]]
-name = "oxml-opc"
-version = "0.4.0"
-source = "git+https://github.com/emptinessform/rdocx?rev=1a7a5dba0677e40468d52f396fb7ee53ead5fa20#1a7a5dba0677e40468d52f396fb7ee53ead5fa20"
-dependencies = [
- "quick-xml",
- "thiserror",
- "zip",
-]
-
-[[package]]
 name = "oxml-pdf"
 version = "0.4.0"
 source = "git+https://github.com/emptinessform/rdocx?rev=1a7a5dba0677e40468d52f396fb7ee53ead5fa20#1a7a5dba0677e40468d52f396fb7ee53ead5fa20"
@@ -334,16 +285,6 @@ dependencies = [
  "tiny-skia",
  "ttf-parser",
  "zune-jpeg",
-]
-
-[[package]]
-name = "oxml-sml"
-version = "0.4.0"
-source = "git+https://github.com/emptinessform/rdocx?rev=1a7a5dba0677e40468d52f396fb7ee53ead5fa20#1a7a5dba0677e40468d52f396fb7ee53ead5fa20"
-dependencies = [
- "oxml-opc",
- "quick-xml",
- "thiserror",
 ]
 
 [[package]]
@@ -408,31 +349,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rdocx-layout"
-version = "0.8.0"
-source = "git+https://github.com/emptinessform/rdocx?rev=1a7a5dba0677e40468d52f396fb7ee53ead5fa20#1a7a5dba0677e40468d52f396fb7ee53ead5fa20"
-dependencies = [
- "oxml-chart",
- "oxml-drawing",
- "oxml-layout",
- "rdocx-oxml",
- "unicode-linebreak",
-]
-
-[[package]]
-name = "rdocx-oxml"
-version = "0.8.0"
-source = "git+https://github.com/emptinessform/rdocx?rev=1a7a5dba0677e40468d52f396fb7ee53ead5fa20#1a7a5dba0677e40468d52f396fb7ee53ead5fa20"
-dependencies = [
- "itoa",
- "oxml-core",
- "oxml-drawing",
- "quick-xml",
- "regex",
- "thiserror",
-]
-
-[[package]]
 name = "read-fonts"
 version = "0.39.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -454,33 +370,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "regex"
-version = "1.13.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f020237b6c8eed93db2e2cb53c00c60a8e1bc73da7d073199a1180401450218d"
+name = "rlayout"
+version = "0.1.0"
 dependencies = [
- "aho-corasick",
- "memchr",
- "regex-automata",
- "regex-syntax",
+ "oxml-layout",
+ "thiserror",
 ]
-
-[[package]]
-name = "regex-automata"
-version = "0.4.18"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad8553b9b26413251cbf30e620595c7a41b3887f03da04579c0e6b0d6a06b4b2"
-dependencies = [
- "aho-corasick",
- "memchr",
- "regex-syntax",
-]
-
-[[package]]
-name = "regex-syntax"
-version = "0.8.11"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 
 [[package]]
 name = "rodf-cli"
@@ -503,12 +398,10 @@ dependencies = [
 name = "rodf-render"
 version = "0.1.0"
 dependencies = [
- "oxml-drawing",
  "oxml-layout",
  "oxml-pdf",
  "png",
- "rdocx-layout",
- "rdocx-oxml",
+ "rlayout",
  "rodf-core",
  "thiserror",
 ]

@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-23 08:12 UTC",
+  "generated": "2026-08-23 08:31 UTC",
   "threshold": 0.95,
   "results": [
     {
@@ -7,7 +7,7 @@
       "losses": 0,
       "raw": 0.9898,
       "blur2": 0.9979,
-      "png_blur2": 0.9729,
+      "png_blur2": 0.9737,
       "status": "PASS"
     },
     {
@@ -15,7 +15,7 @@
       "losses": 0,
       "raw": 0.9005,
       "blur2": 0.9851,
-      "png_blur2": 0.9494,
+      "png_blur2": 0.9482,
       "status": "PASS"
     },
     {
@@ -23,7 +23,7 @@
       "losses": 0,
       "raw": 0.8648,
       "blur2": 0.9759,
-      "png_blur2": 0.9558,
+      "png_blur2": 0.9555,
       "status": "PASS"
     },
     {
@@ -31,23 +31,23 @@
       "losses": 0,
       "raw": 0.9464,
       "blur2": 0.9857,
-      "png_blur2": 0.9904,
+      "png_blur2": 0.9897,
       "status": "PASS"
     },
     {
       "doc": "multi-paragraph",
       "losses": 0,
-      "raw": 0.9623,
-      "blur2": 0.9812,
-      "png_blur2": 0.9582,
+      "raw": 0.9456,
+      "blur2": 0.9898,
+      "png_blur2": 0.9726,
       "status": "PASS"
     },
     {
       "doc": "plain-en-12",
       "losses": 0,
-      "raw": 0.9827,
+      "raw": 0.9829,
       "blur2": 0.9957,
-      "png_blur2": 0.9681,
+      "png_blur2": 0.9694,
       "status": "PASS"
     },
     {
@@ -55,15 +55,15 @@
       "losses": 0,
       "raw": 0.9446,
       "blur2": 0.992,
-      "png_blur2": 0.9617,
+      "png_blur2": 0.9626,
       "status": "PASS"
     },
     {
       "doc": "size-ladder",
       "losses": 0,
-      "raw": 0.9652,
-      "blur2": 0.9829,
-      "png_blur2": 0.9876,
+      "raw": 0.9436,
+      "blur2": 0.989,
+      "png_blur2": 0.9875,
       "status": "PASS"
     },
     {
@@ -71,14 +71,14 @@
       "losses": 0,
       "raw": 0.9915,
       "blur2": 0.9984,
-      "png_blur2": 0.9468,
+      "png_blur2": 0.9451,
       "status": "PASS"
     },
     {
       "doc": "wrap-mixed",
       "losses": 0,
-      "raw": 0.9902,
-      "blur2": 0.9983,
+      "raw": 0.9903,
+      "blur2": 0.9984,
       "png_blur2": 0.9547,
       "status": "PASS"
     }

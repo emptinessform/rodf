@@ -94,19 +94,17 @@ mod script_split {
 }
 
 #[test]
-fn paragraphs_get_odf_spacing_defaults_not_word_defaults() {
-    use rdocx_oxml::{BodyContent, Twips};
-    // ODF/LO 기본: 문단 간격 0, 단일 행간 — Word Normal(1.08행간, after-spacing)을
-    // 그대로 두면 문단 수직 위치가 오라클과 어긋난다.
-    let (input, _losses) = rodf_render::to_layout_input(&fixture());
-    for content in &input.document.body.content {
-        let BodyContent::Paragraph(p) = content else { continue };
-        let ppr = p.properties.as_ref().expect("paragraph properties set");
-        assert_eq!(ppr.space_before, Some(Twips(0)));
-        assert_eq!(ppr.space_after, Some(Twips(0)));
-        assert_eq!(ppr.line_spacing, Some(Twips(240)));
-        assert_eq!(ppr.line_rule.as_deref(), Some("font-natural"));
-    }
+fn hello_maps_to_neutral_ir_with_per_script_runs() {
+    // 제목: 서양 24pt bold / asian 10pt(default-style) — 문자 체계별 런 분할.
+    let (ir, _losses) = rodf_render::to_document(&fixture());
+    assert!((ir.page.width_pt - 595.3).abs() < 0.5, "A4 width");
+    assert_eq!(ir.blocks.len(), 2);
+    let rlayout::Block::Paragraph(heading) = &ir.blocks[0];
+    assert_eq!(heading.runs.len(), 2, "asian + western runs");
+    assert_eq!(heading.runs[0].style.font_size_pt, 10.0); // 안녕하세요 (asian)
+    assert!(!heading.runs[0].style.bold);
+    assert_eq!(heading.runs[1].style.font_size_pt, 24.0); // Hello — rodf (western)
+    assert!(heading.runs[1].style.bold);
 }
 
 mod line_gap {

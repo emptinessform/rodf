@@ -48,14 +48,14 @@ MB급)이고, 순수 Rust 진영(libreoffice-rs/lo_odf)은 생성 전용으로 �
     │                서양(fo:*)/동아시아(style:*-asian) 속성 분리,
     │                master-page 페이지 기하
     ▼
- rodf-render      경로 α 어댑터: ODF 모델 → rdocx LayoutInput (CT_*)
-    │                to_layout_input() 공개, 문자체계별 런 분할,
-    │                font-natural 행간, MappingLoss 수집
+ rodf-render      ODF 모델 → 중립 IR 매핑 (문자체계별 런 분할)
     ▼
- rdocx-layout     플로우 엔진 (포크: emptinessform/rdocx, rev 고정)
+ rlayout          ★ 중립 문서 IR + 플로우 엔진 (M2, 자체 크레이트)
+    │                LO/ODF 관례 기본값: 폰트 자연 행간(gap 위),
+    │                한글 어절 줄바꿈 — sentinel 불필요
     ▼
- oxml-layout      ★ 포맷 중립 공유 계층: 폰트/셰이핑/줄바꿈/LayoutResult
-    ▼                — rlayout(M2)의 씨앗, rdocx·rpptx·rodf가 공유
+ oxml-layout      포맷 중립 공유 계층: 폰트/셰이핑/줄바꿈/LayoutResult
+    ▼                (포크 모노레포 소속, rev 고정 — DOCX 모델은 미의존)
  oxml-pdf         LayoutResult → PDF/PNG (중립)
 
  rodf-cli         rodf render in.odt out.{pdf,png}
@@ -63,9 +63,11 @@ MB급)이고, 순수 Rust 진영(libreoffice-rs/lo_odf)은 생성 전용으로 �
  tools/corpus.py  코퍼스 스코어보드 (게이트 아님) → docs/scoreboard.{md,json}
 ```
 
-- **경로 α (현행)**: ODF→CT_* 매핑으로 엔진 재사용. 매핑 손실을 MappingLoss로
-  수집해 **경로 β**(oxml-layout 위 rodf-layout 신규 엔진, rpptx-layout 선례)
-  전환 판단의 데이터로 쓴다 (D10 하이브리드).
+- **M2 완료 (2026-08-23)**: 경로 α(ODF→CT_* 어댑터)를 rlayout 전환으로 대체 —
+  D10 하이브리드가 예정한 β 전환의 실현. rodf 의존 그래프에서
+  rdocx-layout/rdocx-oxml 소멸, font-natural sentinel도 rodf 경로에서 불필요
+  (포크의 sentinel은 Word 크레이트 쪽 호환용으로 잔존). 스코어보드 10/10 유지로
+  픽셀 등가 검증. MappingLoss API는 IR 미표현 의미론 기록용으로 유지(현재 0건).
 - **엔진 의존**: `emptinessform/rdocx` git 의존, rev `7575436` 고정. 포크는
   자체 발전하는 독립 라인 — 업스트림(tensorbee) PR 보류 (→ §6).
 
@@ -78,7 +80,7 @@ MB급)이고, 순수 Rust 진영(libreoffice-rs/lo_odf)은 생성 전용으로 �
 | M0 엔진 분리성 스파이크 | **완료** | 엄격 중립성 실패 확인, 어댑터 저비용 실증 → 부록 A.1 |
 | M1 파싱→렌더→오라클 ≥0.95 | **완료** | hello blur2 0.9829 / gulim 0.9764 PASS → 부록 A.2~A.4 |
 | M1.5 코퍼스+CI | **1차 슬라이스 완료** | 코퍼스 10문서, 스코어보드 6/10 PASS, GitHub Actions |
-| M2 rlayout 승격 | 대기 (조건 충족: 스파이크 저비용 통과) | 착수 시점은 백로그 소진 후 판단 |
+| M2 rlayout 승격 | **완료** (D13) | rlayout v0 + rodf 전환, 스코어보드 10/10 유지, DOCX 의존 소멸 |
 
 - 테스트 **20개** (전부 테스트 우선 작성): core 5 · render 12 · cli 3.
 - 저장소 공개: README(한/영 병기) + side-by-side 이미지 + MCFS 라이선스 문서.
@@ -173,6 +175,7 @@ rmcf(런타임)와 상호보완, 메트릭 JSON 스펙을 rmcf 데이터 포맷�
 | D11 | 통합 뷰어 구조 | 멀티 백엔드 뷰어 셸 먼저, 편집 구조는 경험 후 결정 |
 | D12 | 용어 | MCFS / 크레이트 `rmcf` ("FSL"은 한/글 용어, 참조만) |
 | — | 저장소·라이선스 | emptinessform/rodf 공개, MIT OR Apache-2.0 듀얼 |
+| D13 | M2 착수 방향 | 기능 확장(M3)보다 **rlayout 승격 우선** (2026-08-23). 전략: rdocx-layout에서 추출하지 않고 **rodf 워크스페이스에 `crates/rlayout` 신규 작성**(rpptx 선례) — oxml-layout 위의 중립 문서 IR + 플로우 엔진, LO 관례가 기본값(font-natural sentinel·MappingLoss 소멸). 완료 기준: 스코어보드 10/10 유지 + rodf 의존에서 rdocx-oxml/rdocx-layout 제거. 안정 후 시리즈 공용 위치로 이동. 포크 동시 세션 충돌 회피 겸용 |
 | — | 업스트림 관계 | **독립 라인 유지, tensorbee PR 보류.** 포크(svg-poc-0.8)는 자체 커밋이 쌓인 독립 엔진 라인 — PR 하나로 포크 의존이 해소되지 않아 실익 없음. 재검토 조건: ① 업스트림 추종 전략 전환 시 ② 기여 자체가 목적일 때 |
 
 ---
