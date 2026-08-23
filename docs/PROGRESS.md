@@ -36,8 +36,10 @@
   정렬. 매트릭스 10/10 유지, space.odt는 tab 노트 해소로 잔여 원인(span
   ×72)이 분리 측정됨(FAIL 0.68 — span 기능 대기열). 테스트 37개.
 - ✅ **업스트림 기여: tensorbee/rdocx PR #45** — 메인테이너가 이슈 #44에 PR
-  요청 → 포크의 두 커밋(caller 폰트 별칭)을 S52 이후 main에 리베이스·적응해
-  제출(브랜치 pr/fontfile-family). 업스트림 기반 테스트 231/0(+환경 이슈 3).
+  요청 → 포크의 두 커밋(caller 폰트 별칭, 원저자 크레딧 보존)을 S52 이후
+  main에 리베이스·적응해 제출(브랜치 pr/fontfile-family). 업스트림 기반
+  테스트 231/0(+환경 이슈 3). **후속 리뷰 대응은 rdoc 워크스트림으로 인계**
+  (이슈·커밋·유스케이스의 발원지이며 업스트림 PR 채널(#43)도 그쪽 운영).
 - ✅ **와일드 FAIL 7건 전부 해소 — 33 PASS / 17 UNSUPPORTED / 0 FAIL / 0 CRASH**
   진단: 요소 히스토그램으로 7건 분류. 수정 3건: ① **문단 정렬**(fo:text-align
   파싱→rlayout Center/End/Justify — paste 문서 0.55의 정체) ② **빈 문단 보존**
