@@ -57,6 +57,7 @@ def compare(odt: Path) -> dict:
       힌팅/감마/AA 차이가 상쇄되어 순수 레이아웃·글리프 배치 충실도를 잰다.
     - png 경로(참고): LO PNG 내보내기 vs rodf 자체 래스터 — 최종 사용자가
       보는 시각 동등성(래스터라이저 차이 포함)."""
+    odt = odt.resolve()  # subprocess들은 다른 cwd에서 돌므로 절대경로 필수
     result = {"doc": odt.stem}
     with tempfile.TemporaryDirectory() as tmp:
         tmp_dir = Path(tmp)
@@ -66,8 +67,11 @@ def compare(odt: Path) -> dict:
             result["status"] = "CRASH"
             result["detail"] = (proc.stderr or "").strip()[-200:]
             return result
-        losses = [l for l in (proc.stderr or "").splitlines() if "mapping loss" in l]
-        result["losses"] = len(losses)
+        stderr_lines = (proc.stderr or "").splitlines()
+        result["losses"] = sum(1 for l in stderr_lines if "mapping loss" in l)
+        coverage = [l.split("coverage: ", 1)[1] for l in stderr_lines if "coverage: " in l]
+        if coverage:
+            result["coverage"] = ", ".join(coverage)
 
         try:
             lo, ro = render_pair(odt, tmp_dir, 144.0, "pdf")
@@ -103,11 +107,18 @@ def main() -> None:
     for odt in docs:
         r = compare(odt)
         if "status" not in r:
-            r["status"] = "PASS" if r["blur2"] >= args.threshold else "FAIL"
+            if r["blur2"] >= args.threshold:
+                r["status"] = "PASS"
+            elif r.get("coverage"):
+                # 미지원 요소가 든 문서는 실패가 아니라 커버리지 미달 (설계 원칙).
+                r["status"] = "UNSUPPORTED"
+            else:
+                r["status"] = "FAIL"
         rows.append(r)
         print(f'{r["doc"]:<22}{r["status"]:<14}raw={r.get("raw","-"):<9}blur2={r.get("blur2","-"):<9}png={r.get("png_blur2","-")}')
 
     passed = sum(1 for r in rows if r["status"] == "PASS")
+    unsupported = sum(1 for r in rows if r["status"] == "UNSUPPORTED")
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
     lines = [
@@ -117,15 +128,15 @@ def main() -> None:
         "",
         "`png blur2`는 참고 열: LO PNG 내보내기 vs rodf 자체 래스터 (힌팅/감마 차이 포함).",
         "",
-        f"**{passed}/{len(rows)} PASS**",
+        f"**{passed}/{len(rows)} PASS** · {unsupported} unsupported (coverage gaps)",
         "",
-        "| doc | status | raw SSIM | blur2 SSIM | png blur2 | losses |",
+        "| doc | status | raw SSIM | blur2 SSIM | png blur2 | coverage gaps |",
         "|---|---|---|---|---|---|",
     ]
     for r in rows:
         lines.append(
             f'| {r["doc"]} | {r["status"]} | {r.get("raw", "—")} | '
-            f'{r.get("blur2", "—")} | {r.get("png_blur2", "—")} | {r.get("losses", "—")} |'
+            f'{r.get("blur2", "—")} | {r.get("png_blur2", "—")} | {r.get("coverage", "—")} |'
         )
     lines.append("")
     args.out.parent.mkdir(parents=True, exist_ok=True)

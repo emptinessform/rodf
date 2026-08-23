@@ -6,7 +6,11 @@ use std::path::Path;
 
 use crate::OdfError;
 
-const ODT_MIME: &str = "application/vnd.oasis.opendocument.text";
+/// 허용 mimetype — 문서와 템플릿은 같은 텍스트 문서 구조를 가진다.
+const ODT_MIMES: &[&str] = &[
+    "application/vnd.oasis.opendocument.text",
+    "application/vnd.oasis.opendocument.text-template",
+];
 
 /// 열린 ODT 패키지의 주요 XML 파트.
 pub struct OdtPackage {
@@ -19,7 +23,7 @@ impl OdtPackage {
         let mut zip = zip::ZipArchive::new(File::open(path)?)?;
 
         let mimetype = read_entry(&mut zip, "mimetype")?;
-        if mimetype.trim() != ODT_MIME {
+        if !ODT_MIMES.contains(&mimetype.trim()) {
             return Err(OdfError::WrongMimeType(mimetype.trim().to_string()));
         }
 

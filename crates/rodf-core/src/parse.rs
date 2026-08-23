@@ -16,6 +16,20 @@ use crate::OdfError;
 pub struct Content {
     pub automatic_styles: ContentStyles,
     pub paragraphs: Vec<RawParagraph>,
+    /// 미지원 구조 요소 집계 (요소 로컬명 → 등장 횟수). 해당 서브트리는
+    /// 파싱에서 제외된다 — 조용히 사라지는 대신 커버리지 미달로 보고한다.
+    pub unsupported: HashMap<String, usize>,
+}
+
+/// 아직 렌더 경로가 없는 구조 요소 — 서브트리째 건너뛰고 집계한다.
+fn unsupported_kind(local: &[u8]) -> Option<&'static str> {
+    match local {
+        b"table" => Some("table"),
+        b"frame" => Some("frame"),
+        b"list" => Some("list"),
+        b"image" => Some("image"),
+        _ => None,
+    }
 }
 
 #[derive(Debug)]
@@ -226,10 +240,21 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
     // text:p 내부 텍스트 수집 상태. span 등 중첩 요소 깊이를 추적한다.
     let mut para: Option<RawParagraph> = None;
     let mut para_depth = 0usize;
+    // 미지원 서브트리 스킵 깊이 (0 = 스킵 아님).
+    let mut skip_depth = 0usize;
 
     loop {
         match reader.read_event()? {
             Event::Start(e) => {
+                if skip_depth > 0 {
+                    skip_depth += 1;
+                    continue;
+                }
+                if let Some(kind) = unsupported_kind(local_name(e.name().as_ref())) {
+                    *content.unsupported.entry(kind.to_string()).or_default() += 1;
+                    skip_depth = 1;
+                    continue;
+                }
                 if para.is_some() {
                     para_depth += 1;
                 } else {
@@ -249,7 +274,8 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
                                 ));
                             }
                         }
-                        b"p" => {
+                        // text:h(제목)는 text:p와 같은 문단 흐름이다.
+                        b"p" | b"h" => {
                             para = Some(RawParagraph {
                                 style_name: attr_local(&e, "style-name"),
                                 text: String::new(),
@@ -261,6 +287,11 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
                 }
             }
             Event::Empty(e) => match local_name(e.name().as_ref()) {
+                _ if skip_depth > 0 => {}
+                kind_name if unsupported_kind(kind_name).is_some() => {
+                    let kind = unsupported_kind(kind_name).unwrap();
+                    *content.unsupported.entry(kind.to_string()).or_default() += 1;
+                }
                 b"font-face" => read_font_face(&e, &mut content.automatic_styles.font_faces),
                 b"text-properties" => {
                     if let Some((_, style)) = &mut current_style {
@@ -288,11 +319,18 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
                 _ => {}
             },
             Event::Text(t) => {
+                if skip_depth > 0 {
+                    continue;
+                }
                 if let Some(p) = &mut para {
                     p.text.push_str(&t.decode()?);
                 }
             }
             Event::End(e) => {
+                if skip_depth > 0 {
+                    skip_depth -= 1;
+                    continue;
+                }
                 if para.is_some() {
                     para_depth -= 1;
                     if para_depth == 0 {

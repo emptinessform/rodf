@@ -25,6 +25,10 @@ fn render(input: &Path, output: &Path) -> ExitCode {
         }
     };
 
+    for note in doc.coverage_notes() {
+        eprintln!("rodf: coverage: {} x{}", note.element, note.count);
+    }
+
     let rendered = match rodf_render::render(&doc) {
         Ok(r) => r,
         Err(e) => {

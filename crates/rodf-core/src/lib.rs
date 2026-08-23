@@ -11,6 +11,15 @@ use std::path::Path;
 
 pub use styles::{PageGeometry, ResolvedTextStyle};
 
+/// 파싱은 됐지만 렌더 경로가 없어 건너뛴 구조 요소의 집계.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct CoverageNote {
+    /// 요소 로컬명 (예: "table", "frame", "list", "image").
+    pub element: String,
+    /// 등장 횟수.
+    pub count: usize,
+}
+
 /// 파싱된 문단 하나. 텍스트와 해석 완료된 스타일을 보관한다.
 #[derive(Debug, Clone)]
 pub struct Paragraph {
@@ -33,6 +42,7 @@ impl Paragraph {
 pub struct Document {
     paragraphs: Vec<Paragraph>,
     page_geometry: Option<PageGeometry>,
+    coverage_notes: Vec<CoverageNote>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -65,6 +75,7 @@ impl Document {
             .and_then(|name| style_sheet.page_layouts.get(name))
             .cloned();
 
+        let content_unsupported = content.unsupported;
         let resolver = styles::StyleResolver::new(style_sheet, content.automatic_styles);
         let paragraphs = content
             .paragraphs
@@ -74,9 +85,15 @@ impl Document {
                 text: p.text,
             })
             .collect();
+        let mut coverage_notes: Vec<CoverageNote> = content_unsupported
+            .into_iter()
+            .map(|(element, count)| CoverageNote { element, count })
+            .collect();
+        coverage_notes.sort_by(|a, b| a.element.cmp(&b.element));
         Ok(Document {
             paragraphs,
             page_geometry,
+            coverage_notes,
         })
     }
 
@@ -87,5 +104,10 @@ impl Document {
     /// 첫 master-page의 페이지 기하 (pt).
     pub fn page_geometry(&self) -> Option<&PageGeometry> {
         self.page_geometry.as_ref()
+    }
+
+    /// 렌더 경로가 없어 건너뛴 요소들 — 비어 있으면 문서 전체가 지원 범위다.
+    pub fn coverage_notes(&self) -> &[CoverageNote] {
+        &self.coverage_notes
     }
 }

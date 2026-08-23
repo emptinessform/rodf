@@ -61,3 +61,60 @@ fn heading_keeps_asian_properties_separate_from_western() {
     assert_eq!(style.font_size_asian_pt, Some(10.0));
     assert!(!style.bold_asian);
 }
+
+mod coverage {
+    use rodf_core::Document;
+
+    /// LibreOffice로 저작한, 표·이미지 프레임·목록·제목(text:h)이 든 픽스처.
+    fn features() -> Document {
+        Document::open(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/fixtures/features.odt"
+        ))
+        .expect("features.odt should open")
+    }
+
+    /// text:h(제목)는 text:p와 같은 문단 흐름이다 — 조용히 버려지면 안 된다.
+    #[test]
+    fn heading_elements_are_paragraphs() {
+        let doc = features();
+        assert!(
+            doc.paragraphs().iter().any(|p| p.text().contains("제목입니다")),
+            "text:h content missing: {:?}",
+            doc.paragraphs().iter().map(|p| p.text()).collect::<Vec<_>>()
+        );
+    }
+
+    /// 미지원 구조 요소(표/프레임/목록)는 조용히 사라지지 말고 집계돼야 한다.
+    #[test]
+    fn unsupported_elements_are_reported() {
+        let doc = features();
+        let notes = doc.coverage_notes();
+        let kinds: Vec<&str> = notes.iter().map(|n| n.element.as_str()).collect();
+        assert!(kinds.contains(&"table"), "table not reported: {kinds:?}");
+        assert!(kinds.contains(&"frame"), "frame not reported: {kinds:?}");
+        assert!(kinds.contains(&"list"), "list not reported: {kinds:?}");
+    }
+
+    /// 지원 범위 안의 문서(hello)는 커버리지 노트가 없어야 한다.
+    #[test]
+    fn supported_documents_have_no_notes() {
+        let doc = Document::open(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/fixtures/hello.odt"
+        ))
+        .unwrap();
+        assert!(doc.coverage_notes().is_empty());
+    }
+}
+
+/// ODT 템플릿(.ott, text-template mimetype)도 같은 문서 구조다 — 열려야 한다.
+#[test]
+fn opens_text_template_mimetype() {
+    let doc = rodf_core::Document::open(concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../corpus-wild/fdo53210.odt"
+    ))
+    .expect("text-template should open");
+    let _ = doc.paragraphs();
+}

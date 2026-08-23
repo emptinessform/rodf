@@ -22,13 +22,20 @@
 ## 대기열 (우선순위순)
 - [ ] **rodf 자체 래스터의 감마/힌팅** (선택) — png 경로 0.947~0.99. 최종 사용자
   시각 동등성 항목. GDI식 감마 블렌딩 근사를 tiny-skia 경로에 적용할지 검토.
-- [ ] **공개 라이선스 ODT 코퍼스 수집** — 출처·저작권 기록, 50~100개.
 - [ ] **CI 렌더 테스트 안정화** — 러너 한국어 폰트 문제, OFL 폰트 번들 검토.
 
 ## 완료 기록 (최신순)
 
 ### 2026-08-23
 
+- ✅ **와일드 ODT 코퍼스 (M1.5 완결)** — LO core odfimport 테스트 ODT
+  (MPL-2.0, libreoffice-26.2.1.2 태그 고정) 50개 수집기(fetch_corpus.py) +
+  출처 대장(CORPUS-PROVENANCE.md, 파일별 sha256). 선행 구현: rodf-core
+  **커버리지 감지**(미지원 table/frame/list/image 서브트리 스킵+집계,
+  coverage_notes API) + **text:h 문단 처리**(조용히 버려지던 제목 복구) +
+  템플릿 mimetype 허용 + 스코어보드 UNSUPPORTED 상태.
+  **첫 실전 결과: 32 PASS / 11 UNSUPPORTED / 7 FAIL / 크래시 0.**
+  FAIL 7건은 대기열 등재 (인라인 요소 계열).
 - ✅ **행말 공백 오버플로 규칙 — 양 프로파일 10/10 달성** — multi-paragraph
   진단(밴드 7행 y 전부 일치, LONG_KO 첫 줄바꿈만 한 어절 차이)으로 적합
   판정이 어절의 꼬리 공백 폭까지 요구하는 결함 발견. LO·Word·CSS 공통 관행
