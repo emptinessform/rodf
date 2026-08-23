@@ -228,3 +228,62 @@ mod synthetic_italic {
         );
     }
 }
+
+mod korean_word_wrap {
+    use rodf_core::Document;
+
+    /// 행별 잉크 우측 경계 목록.
+    fn right_edges(png: &[u8]) -> Vec<u32> {
+        let decoder = png::Decoder::new(std::io::Cursor::new(png));
+        let mut reader = decoder.read_info().unwrap();
+        let mut buf = vec![0u8; reader.output_buffer_size().unwrap()];
+        let info = reader.next_frame(&mut buf).unwrap();
+        let (w, h) = (info.width as usize, info.height as usize);
+        let bpp = info.buffer_size() / (w * h);
+        let mut edges = Vec::new();
+        let mut in_band = false;
+        let mut band_max = 0u32;
+        for y in 0..h {
+            let row_max = (0..w).rev().find(|&x| buf[(y * w + x) * bpp] < 245);
+            match row_max {
+                Some(x) => {
+                    in_band = true;
+                    band_max = band_max.max(x as u32);
+                }
+                None => {
+                    if in_band {
+                        edges.push(band_max);
+                        band_max = 0;
+                        in_band = false;
+                    }
+                }
+            }
+        }
+        if in_band {
+            edges.push(band_max);
+        }
+        edges
+    }
+
+    /// LO는 한글을 어절(공백) 단위로 줄바꿈한다 — "가나다라마바사 "×20은
+    /// 행당 5어절, 우측 경계 987px(실측)로 4행. UAX14 기본(음절 단위)이면
+    /// 1066+까지 채워져 어절이 중간에서 잘린다.
+    #[test]
+    fn korean_wraps_at_word_boundaries_like_libreoffice() {
+        let doc = Document::open(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/fixtures/wrap-word.odt"
+        ))
+        .expect("wrap-word.odt should open");
+        let rendered = rodf_render::render(&doc).expect("render");
+        let png = rendered.page_png(0, 144.0).expect("page 0");
+        let edges = right_edges(&png);
+        assert_eq!(edges.len(), 4, "expected 4 lines, got {edges:?}");
+        for e in &edges {
+            assert!(
+                (975..=999).contains(e),
+                "line right edge {e} should be ~987 (word wrap); all={edges:?}"
+            );
+        }
+    }
+}

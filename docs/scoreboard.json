@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-23 07:17 UTC",
+  "generated": "2026-08-23 07:40 UTC",
   "threshold": 0.95,
   "results": [
     {
@@ -33,9 +33,9 @@
     {
       "doc": "multi-paragraph",
       "losses": 0,
-      "raw": 0.8158,
-      "blur2": 0.8988,
-      "status": "FAIL"
+      "raw": 0.8818,
+      "blur2": 0.9582,
+      "status": "PASS"
     },
     {
       "doc": "plain-en-12",
@@ -61,8 +61,8 @@
     {
       "doc": "wrap-korean",
       "losses": 0,
-      "raw": 0.7673,
-      "blur2": 0.8397,
+      "raw": 0.8592,
+      "blur2": 0.9468,
       "status": "FAIL"
     },
     {
