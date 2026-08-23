@@ -5,13 +5,21 @@ LibreOffice로 저작해 corpus/에 저장한다.
 사용법: python tools/gen_corpus.py
 """
 
+import argparse
 import subprocess
 import sys
 from pathlib import Path
 
-SOFFICE = r"C:\Program Files\LibreOffice\program\soffice.exe"
+from oracle import find_soffice
+
 ROOT = Path(__file__).resolve().parent.parent
-CORPUS = ROOT / "corpus"
+
+# 폰트 셋: windows = 로컬 개발(한국 Windows 표준 폰트, lineGap 지형 포함),
+# noto = 결정론 오라클/CI (OFL, 컨테이너에 고정 설치 가능).
+FONT_SETS = {
+    "windows": {"sans": "맑은 고딕", "sans2": "굴림", "serif": "바탕"},
+    "noto": {"sans": "Noto Sans CJK KR", "sans2": "Noto Sans CJK KR", "serif": "Noto Serif CJK KR"},
+}
 
 HEAD = """<?xml version="1.0" encoding="UTF-8"?>
 <office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
@@ -21,9 +29,9 @@ HEAD = """<?xml version="1.0" encoding="UTF-8"?>
  xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0"
  office:version="1.3" office:mimetype="application/vnd.oasis.opendocument.text">
   <office:font-face-decls>
-    <style:font-face style:name="맑은 고딕" svg:font-family="'맑은 고딕'"/>
-    <style:font-face style:name="굴림" svg:font-family="'굴림'"/>
-    <style:font-face style:name="바탕" svg:font-family="'바탕'"/>
+    <style:font-face style:name="{sans}" svg:font-family="'{sans}'"/>
+    <style:font-face style:name="{sans2}" svg:font-family="'{sans2}'"/>
+    <style:font-face style:name="{serif}" svg:font-family="'{serif}'"/>
   </office:font-face-decls>
   <office:automatic-styles>
 {styles}
@@ -34,7 +42,7 @@ HEAD = """<?xml version="1.0" encoding="UTF-8"?>
 </office:document>"""
 
 
-def pstyle(name, font="맑은 고딕", size=None, size_asian=None, bold=False, italic=False):
+def pstyle(name, font="{sans}", size=None, size_asian=None, bold=False, italic=False):
     attrs = [f'style:font-name="{font}"', f'style:font-name-asian="{font}"']
     if size is not None:
         attrs.append(f'fo:font-size="{size}pt"')
@@ -86,8 +94,8 @@ DOCS = {
         [p("안녕하세요 Hello 혼합 Mixed", "P1")],
     ),
     # 폰트별 (lineGap 지형: 맑은고딕 gap0 / 굴림·바탕 gap152)
-    "font-gulim": ([pstyle("P1", font="굴림", size=14, size_asian=14)], [p("굴림 글꼴 문단 Gulim paragraph", "P1")] * 3),
-    "font-batang": ([pstyle("P1", font="바탕", size=14, size_asian=14)], [p("바탕 글꼴 문단 Batang paragraph", "P1")] * 3),
+    "font-gulim": ([pstyle("P1", font="{sans2}", size=14, size_asian=14)], [p("굴림 글꼴 문단 Gulim paragraph", "P1")] * 3),
+    "font-batang": ([pstyle("P1", font="{serif}", size=14, size_asian=14)], [p("바탕 글꼴 문단 Batang paragraph", "P1")] * 3),
     # 줄바꿈 (여러 줄로 감김)
     "wrap-korean": ([pstyle("P1", size=12, size_asian=12)], [p(LONG_KO, "P1")]),
     "wrap-mixed": ([pstyle("P1", size=12, size_asian=12)], [p(LONG_MIX, "P1")]),
@@ -100,19 +108,29 @@ DOCS = {
 
 
 def main() -> None:
-    CORPUS.mkdir(exist_ok=True)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--font-set", choices=sorted(FONT_SETS), default="windows")
+    parser.add_argument("--out", type=Path, default=ROOT / "corpus")
+    args = parser.parse_args()
+    fonts = FONT_SETS[args.font_set]
+    soffice = find_soffice()
+
+    args.out.mkdir(parents=True, exist_ok=True)
     for name, (styles, paras) in DOCS.items():
-        fodt = CORPUS / f"{name}.fodt"
-        fodt.write_text(
-            HEAD.format(styles="\n".join(styles), paras="\n".join(paras)),
-            encoding="utf-8",
+        body = (
+            HEAD.replace("{styles}", "\n".join(styles))
+            .replace("{paras}", "\n".join(paras))
         )
+        for key, family in fonts.items():
+            body = body.replace("{%s}" % key, family)
+        fodt = args.out / f"{name}.fodt"
+        fodt.write_text(body, encoding="utf-8")
         subprocess.run(
-            [SOFFICE, "--headless", "--convert-to", "odt", str(fodt), "--outdir", str(CORPUS)],
+            [soffice, "--headless", "--convert-to", "odt", str(fodt), "--outdir", str(args.out)],
             check=True, capture_output=True,
         )
-        print(f"generated corpus/{name}.odt")
-    print(f"{len(DOCS)} documents")
+        print(f"generated {args.out.name}/{name}.odt")
+    print(f"{len(DOCS)} documents ({args.font_set})")
 
 
 if __name__ == "__main__":

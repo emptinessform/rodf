@@ -1,0 +1,86 @@
+{
+  "generated": "2026-08-23 09:12 UTC",
+  "threshold": 0.95,
+  "results": [
+    {
+      "doc": "bold-italic",
+      "losses": 0,
+      "raw": 0.7473,
+      "blur2": 0.9245,
+      "png_blur2": null,
+      "status": "FAIL"
+    },
+    {
+      "doc": "font-batang",
+      "losses": 0,
+      "raw": 0.9736,
+      "blur2": 0.9923,
+      "png_blur2": null,
+      "status": "PASS"
+    },
+    {
+      "doc": "font-gulim",
+      "losses": 0,
+      "raw": 0.8547,
+      "blur2": 0.9573,
+      "png_blur2": null,
+      "status": "PASS"
+    },
+    {
+      "doc": "mixed-script-sizes",
+      "losses": 0,
+      "raw": 0.9446,
+      "blur2": 0.9824,
+      "png_blur2": null,
+      "status": "PASS"
+    },
+    {
+      "doc": "multi-paragraph",
+      "losses": 0,
+      "raw": 0.7397,
+      "blur2": 0.7965,
+      "png_blur2": null,
+      "status": "FAIL"
+    },
+    {
+      "doc": "plain-en-12",
+      "losses": 0,
+      "raw": 0.9709,
+      "blur2": 0.9885,
+      "png_blur2": null,
+      "status": "PASS"
+    },
+    {
+      "doc": "plain-ko-10",
+      "losses": 0,
+      "raw": 0.9129,
+      "blur2": 0.9886,
+      "png_blur2": null,
+      "status": "PASS"
+    },
+    {
+      "doc": "size-ladder",
+      "losses": 0,
+      "raw": 0.9836,
+      "blur2": 0.9956,
+      "png_blur2": null,
+      "status": "PASS"
+    },
+    {
+      "doc": "wrap-korean",
+      "losses": 0,
+      "raw": 0.7872,
+      "blur2": 0.8592,
+      "png_blur2": null,
+      "status": "FAIL"
+    },
+    {
+      "doc": "wrap-mixed",
+      "losses": 0,
+      "raw": 0.6051,
+      "blur2": 0.6948,
+      "png_blur2": null,
+      "status": "FAIL"
+    }
+  ]
+}

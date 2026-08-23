@@ -74,25 +74,30 @@ def compare(odt: Path) -> dict:
             pdf_scores = score_pair(lo, ro)
             result["raw"] = pdf_scores["raw"]
             result["blur2"] = pdf_scores["blur2"]
-            lo2, ro2 = render_pair(odt, Path(tempfile.mkdtemp(dir=tmp)), 144.0, "png")
-            result["png_blur2"] = score_pair(lo2, ro2)["blur2"]
         except Exception as e:
             result["status"] = "ORACLE-ERROR"
             result["detail"] = str(e)[:200]
             return result
+        # png 경로는 참고 열 — 환경에 따라(LO PNG 필터 미지원 등) 없을 수 있다.
+        try:
+            lo2, ro2 = render_pair(odt, Path(tempfile.mkdtemp(dir=tmp)), 144.0, "png")
+            result["png_blur2"] = score_pair(lo2, ro2)["blur2"]
+        except Exception:
+            result["png_blur2"] = None
     return result
 
 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--threshold", type=float, default=0.95)
+    parser.add_argument("--corpus-dir", type=Path, default=CORPUS)
     parser.add_argument("--out", type=Path, default=ROOT / "docs" / "scoreboard.md")
     parser.add_argument("--json", type=Path, default=ROOT / "docs" / "scoreboard.json")
     args = parser.parse_args()
 
-    docs = sorted(CORPUS.glob("*.odt"))
+    docs = sorted(args.corpus_dir.glob("*.odt"))
     if not docs:
-        raise SystemExit("corpus/ 에 .odt가 없습니다 — tools/gen_corpus.py 먼저 실행")
+        raise SystemExit(f"{args.corpus_dir} 에 .odt가 없습니다 — tools/gen_corpus.py 먼저 실행")
 
     rows = []
     for odt in docs:

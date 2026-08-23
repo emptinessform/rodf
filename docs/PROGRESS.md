@@ -22,8 +22,6 @@
 ## 대기열 (우선순위순)
 - [ ] **rodf 자체 래스터의 감마/힌팅** (선택) — png 경로 0.947~0.99. 최종 사용자
   시각 동등성 항목. GDI식 감마 블렌딩 근사를 tiny-skia 경로에 적용할지 검토.
-- [ ] **오라클 결정론** — LO 버전 고정 Docker + 고정 폰트. (LO는 세션 간
-  비결정 실측됨)
 - [ ] **공개 라이선스 ODT 코퍼스 수집** — 출처·저작권 기록, 50~100개.
 - [ ] **CI 렌더 테스트 안정화** — 러너 한국어 폰트 문제, OFL 폰트 번들 검토.
 
@@ -31,6 +29,12 @@
 
 ### 2026-08-23
 
+- ✅ **오라클 결정론 (M1.5 잔여)** — oracle/Dockerfile: rust 1.95 + Debian
+  bookworm 고정 LO 7.4.7 + Noto CJK KR + poppler 22.12. 코퍼스를 컨테이너
+  안에서 noto 폰트 셋으로 생성(gen_corpus --font-set) → 호스트 무관 재현.
+  주간 CI(oracle.yml) + 로컬 Docker 실검증. png 참고 열은 환경 결측 허용.
+  **noto 프로파일 첫 스코어보드 6/10** — FAIL 4건은 신규 발견(대기열 등재).
+  로컬 실행: docker run -v <repo>:/work -v rodf-oracle-target:/tmp/target rodf-oracle
 - ✅ **M2: rlayout 승격 (D13)** — 중립 문서 IR + 문단 플로우 엔진
   `crates/rlayout` 신규(oxml-layout 직결, LO/ODF 관례 기본값). rodf-render를
   CT_* 어댑터에서 IR 매핑으로 전환, rdocx-layout/rdocx-oxml 의존 소멸,
