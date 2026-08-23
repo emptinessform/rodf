@@ -258,7 +258,7 @@ checksum = "9f7c3e4beb33f85d45ae3e3a1792185706c8e16d043238c593331cc7cd313b50"
 [[package]]
 name = "oxml-layout"
 version = "0.4.0"
-source = "git+https://github.com/emptinessform/rdocx?rev=1a7a5dba0677e40468d52f396fb7ee53ead5fa20#1a7a5dba0677e40468d52f396fb7ee53ead5fa20"
+source = "git+https://github.com/emptinessform/rdocx?rev=46254633e790690ec12f8d244688aa503e08550d#46254633e790690ec12f8d244688aa503e08550d"
 dependencies = [
  "fontdb",
  "harfrust",
@@ -270,12 +270,12 @@ dependencies = [
 [[package]]
 name = "oxml-media"
 version = "0.4.0"
-source = "git+https://github.com/emptinessform/rdocx?rev=1a7a5dba0677e40468d52f396fb7ee53ead5fa20#1a7a5dba0677e40468d52f396fb7ee53ead5fa20"
+source = "git+https://github.com/emptinessform/rdocx?rev=46254633e790690ec12f8d244688aa503e08550d#46254633e790690ec12f8d244688aa503e08550d"
 
 [[package]]
 name = "oxml-pdf"
 version = "0.4.0"
-source = "git+https://github.com/emptinessform/rdocx?rev=1a7a5dba0677e40468d52f396fb7ee53ead5fa20#1a7a5dba0677e40468d52f396fb7ee53ead5fa20"
+source = "git+https://github.com/emptinessform/rdocx?rev=46254633e790690ec12f8d244688aa503e08550d#46254633e790690ec12f8d244688aa503e08550d"
 dependencies = [
  "miniz_oxide 0.9.1",
  "oxml-layout",

@@ -1,6 +1,6 @@
 # rodf fidelity scoreboard
 
-Generated 2026-08-23 08:31 UTC · oracle v2: 양쪽 PDF를 동일 래스터라이저(pdftoppm)로 비교 · pass = blur2 SSIM ≥ 0.95
+Generated 2026-08-23 10:00 UTC · oracle v2: 양쪽 PDF를 동일 래스터라이저(pdftoppm)로 비교 · pass = blur2 SSIM ≥ 0.95
 
 `png blur2`는 참고 열: LO PNG 내보내기 vs rodf 자체 래스터 (힌팅/감마 차이 포함).
 

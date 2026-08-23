@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-23 09:37 UTC",
+  "generated": "2026-08-23 10:03 UTC",
   "threshold": 0.95,
   "results": [
     {
@@ -37,10 +37,10 @@
     {
       "doc": "multi-paragraph",
       "losses": 0,
-      "raw": 0.8857,
-      "blur2": 0.9201,
-      "png_blur2": 0.9106,
-      "status": "FAIL"
+      "raw": 0.9846,
+      "blur2": 0.9954,
+      "png_blur2": 0.978,
+      "status": "PASS"
     },
     {
       "doc": "plain-en-12",
