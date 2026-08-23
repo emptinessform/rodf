@@ -24,8 +24,9 @@ thiserror = "2"
 # M2(D13)부터 rodf는 rdocx-layout/rdocx-oxml에 의존하지 않는다 —
 # rlayout(자체 크레이트)이 oxml-layout 위에서 직접 배치한다.
 # 로컬에서 포크를 고치며 작업할 때는 [patch]로 path 의존을 임시 사용.
-oxml-layout = { git = "https://github.com/emptinessform/rdocx", rev = "46254633e790690ec12f8d244688aa503e08550d" }
-oxml-pdf = { git = "https://github.com/emptinessform/rdocx", rev = "46254633e790690ec12f8d244688aa503e08550d" }
+oxml-layout = { git = "https://github.com/emptinessform/rdocx", rev = "b97c03db686cfa527004f187a87f2f29c8fe2d37" }
+oxml-pdf = { git = "https://github.com/emptinessform/rdocx", rev = "b97c03db686cfa527004f187a87f2f29c8fe2d37" }
+
 
 
 

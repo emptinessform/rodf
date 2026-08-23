@@ -10,6 +10,10 @@ use oxml_layout::{
     Color, FontManager, InlineItem, LayoutResult, LineBreakParams, LineItem, LineSpacing,
     PageFrame, Point, PositionedElement, TextSegment,
 };
+pub use oxml_layout::{TabAlign, TabStop};
+
+/// LibreOffice/ODF의 기본 탭 간격: 1.25cm.
+pub const DEFAULT_TAB_INTERVAL_PT: f64 = 35.433_070_866_141_732;
 
 /// 페이지 기하 (pt).
 #[derive(Debug, Clone, PartialEq)]
@@ -55,6 +59,8 @@ pub struct Paragraph {
     pub space_after_pt: f64,
     /// 한글 어절 단위 줄바꿈 (기본 true — LibreOffice/ODF 관례).
     pub hangul_word_wrap: Option<bool>,
+    /// 명시적 탭 스톱 (텍스트 영역 좌단 기준 pt).
+    pub tab_stops: Vec<TabStop>,
 }
 
 #[derive(Debug, Clone)]
@@ -67,6 +73,8 @@ pub enum Block {
 pub struct Document {
     pub page: PageGeometry,
     pub blocks: Vec<Block>,
+    /// 암시적 탭 스톱 간격 (None = [`DEFAULT_TAB_INTERVAL_PT`]).
+    pub default_tab_interval_pt: Option<f64>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -108,7 +116,7 @@ pub fn layout_with_fonts(
     for block in &doc.blocks {
         let Block::Paragraph(paragraph) = block;
 
-        // 런 셰이핑 → 중립 세그먼트
+        // 런 셰이핑 → 중립 세그먼트. 탭은 셰이핑하지 않고 Tab 아이템으로.
         let mut items: Vec<InlineItem> = Vec::new();
         for run in &paragraph.runs {
             if run.text.is_empty() {
@@ -122,30 +130,40 @@ pub fn layout_with_fonts(
                 &run.text,
             )?;
             let metrics = fm.metrics(font_id, style.font_size_pt)?;
-            let shaped = fm.shape_text(font_id, &run.text, style.font_size_pt)?;
-            items.push(InlineItem::Text(TextSegment {
-                text: run.text.clone(),
-                source: None,
-                font_id,
-                font_size: style.font_size_pt,
-                glyph_ids: shaped.glyph_ids,
-                advances: shaped.advances,
-                width: shaped.width,
-                ascent: metrics.ascent,
-                descent: metrics.descent,
-                line_gap: metrics.line_gap,
-                color: Color::BLACK,
-                bold: style.bold,
-                italic: style.italic,
-                underline: None,
-                strike: false,
-                dstrike: false,
-                highlight: None,
-                baseline_offset: 0.0,
-                hyperlink_url: None,
-                field_kind: None,
-                note: None,
-            }));
+            let mut pieces = run.text.split('\t').peekable();
+            while let Some(piece) = pieces.next() {
+                if !piece.is_empty() {
+                    let shaped = fm.shape_text(font_id, piece, style.font_size_pt)?;
+                    items.push(InlineItem::Text(TextSegment {
+                        text: piece.to_string(),
+                        source: None,
+                        font_id,
+                        font_size: style.font_size_pt,
+                        glyph_ids: shaped.glyph_ids,
+                        advances: shaped.advances,
+                        width: shaped.width,
+                        ascent: metrics.ascent,
+                        descent: metrics.descent,
+                        line_gap: metrics.line_gap,
+                        color: Color::BLACK,
+                        bold: style.bold,
+                        italic: style.italic,
+                        underline: None,
+                        strike: false,
+                        dstrike: false,
+                        highlight: None,
+                        baseline_offset: 0.0,
+                        hyperlink_url: None,
+                        field_kind: None,
+                        note: None,
+                    }));
+                }
+                if pieces.peek().is_some() {
+                    items.push(InlineItem::Tab);
+                }
+            }
+            // (탭 분할 루프가 전체 텍스트를 소비한다)
+
         }
 
         let params = LineBreakParams {
@@ -159,6 +177,10 @@ pub fn layout_with_fonts(
             }),
             // LO/ODF 관례가 기본값: 한글은 어절 단위 줄바꿈.
             hangul_word_wrap: paragraph.hangul_word_wrap.unwrap_or(true),
+            tab_stops: paragraph.tab_stops.clone(),
+            default_tab_interval_pt: doc
+                .default_tab_interval_pt
+                .unwrap_or(DEFAULT_TAB_INTERVAL_PT),
             ..Default::default()
         };
         let lines = oxml_layout::break_into_lines(&items, &params, fm)?;

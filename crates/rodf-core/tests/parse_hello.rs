@@ -166,7 +166,8 @@ mod coverage_wild {
     #[test]
     fn tabs_forms_shapes_and_indexes_are_reported() {
         let root = concat!(env!("CARGO_MANIFEST_DIR"), "/../../corpus-wild");
-        assert!(kinds(&format!("{root}/space.odt")).contains(&"tab".to_string()));
+        // 탭은 이제 지원 기능 — 더 이상 커버리지로 보고되지 않는다.
+        assert!(!kinds(&format!("{root}/space.odt")).contains(&"tab".to_string()));
         assert!(kinds(&format!("{root}/dateFormFormats.odt")).contains(&"control".to_string()));
         assert!(kinds(&format!("{root}/Word2010AsCharShape.odt")).contains(&"custom-shape".to_string()));
         assert!(kinds(&format!("{root}/BibliographyEntryField.odt")).contains(&"bibliography".to_string()));

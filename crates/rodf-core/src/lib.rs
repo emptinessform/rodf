@@ -9,7 +9,7 @@ mod styles;
 
 use std::path::Path;
 
-pub use styles::{Align, PageGeometry, ResolvedTextStyle};
+pub use styles::{Align, PageGeometry, ResolvedTextStyle, TabStop, TabStopAlign};
 
 /// 파싱은 됐지만 렌더 경로가 없어 건너뛴 구조 요소의 집계.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -43,6 +43,7 @@ pub struct Document {
     paragraphs: Vec<Paragraph>,
     page_geometry: Option<PageGeometry>,
     coverage_notes: Vec<CoverageNote>,
+    default_tab_interval_pt: Option<f64>,
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -75,6 +76,7 @@ impl Document {
             .and_then(|name| style_sheet.page_layouts.get(name))
             .cloned();
 
+        let default_tab_interval_pt = style_sheet.tab_stop_distance_pt;
         let content_unsupported = content.unsupported;
         let resolver = styles::StyleResolver::new(style_sheet, content.automatic_styles);
         let paragraphs = content
@@ -94,6 +96,7 @@ impl Document {
             paragraphs,
             page_geometry,
             coverage_notes,
+            default_tab_interval_pt,
         })
     }
 
@@ -109,5 +112,10 @@ impl Document {
     /// 렌더 경로가 없어 건너뛴 요소들 — 비어 있으면 문서 전체가 지원 범위다.
     pub fn coverage_notes(&self) -> &[CoverageNote] {
         &self.coverage_notes
+    }
+
+    /// 문서가 지정한 기본 탭 간격 (pt). 미지정이면 앱 기본(1.25cm)을 쓴다.
+    pub fn default_tab_interval_pt(&self) -> Option<f64> {
+        self.default_tab_interval_pt
     }
 }

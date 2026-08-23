@@ -2,6 +2,21 @@
 
 use std::collections::HashMap;
 
+/// 탭 스톱 정렬 종류 (style:type).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum TabStopAlign {
+    Left,
+    Center,
+    Right,
+}
+
+/// 명시적 탭 스톱 하나 (style:tab-stop).
+#[derive(Debug, Clone, PartialEq)]
+pub struct TabStop {
+    pub pos_pt: f64,
+    pub align: TabStopAlign,
+}
+
 /// 문단 정렬 (fo:text-align).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Align {
@@ -26,6 +41,8 @@ pub struct RawTextProps {
     pub italic_asian: Option<bool>,
     /// 문단 속성이지만 같은 상속 체인을 타므로 함께 나른다.
     pub align: Option<Align>,
+    /// 명시적 탭 스톱 목록 — ODF에서 tab-stops는 통째로 대체된다.
+    pub tab_stops: Option<Vec<TabStop>>,
 }
 
 impl RawTextProps {
@@ -48,6 +65,7 @@ impl RawTextProps {
             bold_asian: other.bold_asian.or(self.bold_asian),
             italic_asian: other.italic_asian.or(self.italic_asian),
             align: other.align.or(self.align),
+            tab_stops: other.tab_stops.clone().or_else(|| self.tab_stops.clone()),
         }
     }
 }
@@ -72,6 +90,8 @@ pub struct StyleSheet {
     pub page_layouts: HashMap<String, PageGeometry>,
     /// 첫 style:master-page가 참조하는 page-layout-name.
     pub master_page_layout: Option<String>,
+    /// default-style의 기본 탭 간격 (style:tab-stop-distance, pt).
+    pub tab_stop_distance_pt: Option<f64>,
 }
 
 /// master-page가 참조하는 page-layout의 페이지 기하 (pt 단위).
@@ -100,6 +120,8 @@ pub struct ResolvedTextStyle {
     pub italic_asian: bool,
     /// 문단 정렬 (미지정 = None, 렌더러 기본은 Start).
     pub align: Option<Align>,
+    /// 명시적 탭 스톱 (없으면 기본 간격의 암시 스톱만).
+    pub tab_stops: Vec<TabStop>,
 }
 
 /// 문단 style-name → 해석된 스타일. automatic(content.xml) 우선,
@@ -174,6 +196,7 @@ impl StyleResolver {
             bold_asian: props.bold_asian.unwrap_or(false),
             italic_asian: props.italic_asian.unwrap_or(false),
             align: props.align,
+            tab_stops: props.tab_stops.unwrap_or_default(),
         }
     }
 }

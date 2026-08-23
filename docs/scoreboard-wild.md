@@ -1,10 +1,10 @@
 # rodf fidelity scoreboard
 
-Generated 2026-08-23 11:29 UTC · oracle v2: 양쪽 PDF를 동일 래스터라이저(pdftoppm)로 비교 · pass = blur2 SSIM ≥ 0.95
+Generated 2026-08-23 12:39 UTC · oracle v2: 양쪽 PDF를 동일 래스터라이저(pdftoppm)로 비교 · pass = blur2 SSIM ≥ 0.95
 
 `png blur2`는 참고 열: LO PNG 내보내기 vs rodf 자체 래스터 (힌팅/감마 차이 포함).
 
-**33/50 PASS** · 17 unsupported (coverage gaps)
+**33/50 PASS** · 16 unsupported (coverage gaps)
 
 | doc | status | raw SSIM | blur2 SSIM | png blur2 | coverage gaps |
 |---|---|---|---|---|---|
@@ -44,7 +44,7 @@ Generated 2026-08-23 11:29 UTC · oracle v2: 양쪽 PDF를 동일 래스터라�
 | ooo77837-1 | UNSUPPORTED | 0.5878 | 0.561 | 0.5696 | forms x1, list x1 |
 | PageBackground | UNSUPPORTED | 0.3893 | 0.3927 | 0.4104 | frame x4 |
 | paste-first-para-direct-format | PASS | 0.9736 | 0.996 | 0.9871 | — |
-| space | UNSUPPORTED | 0.6708 | 0.6787 | 0.6839 | tab x49 |
+| space | FAIL | 0.6725 | 0.6795 | 0.6852 | — |
 | spellmenu-redline | PASS | 0.911 | 0.9746 | 0.965 | — |
 | tdf100033_1 | PASS | 0.9955 | 0.9938 | 0.9945 | frame x3 |
 | tdf100033_2 | UNSUPPORTED | 0.8867 | 0.8558 | 0.859 | frame x3 |
@@ -57,4 +57,4 @@ Generated 2026-08-23 11:29 UTC · oracle v2: 양쪽 PDF를 동일 래스터라�
 | tdf109228 | PASS | 0.9915 | 0.9903 | 0.9903 | frame x1 |
 | tdf113289 | PASS | 0.9907 | 0.9862 | 0.9859 | note x1 |
 | Word2010AsCharShape | UNSUPPORTED | 0.605 | 0.6165 | 0.6233 | custom-shape x1 |
-| ZoneMacroTest | UNSUPPORTED | 0.7734 | 0.7682 | 0.7712 | forms x1, tab x2, table x1 |
+| ZoneMacroTest | UNSUPPORTED | 0.7926 | 0.7751 | 0.7781 | forms x1, table x1 |

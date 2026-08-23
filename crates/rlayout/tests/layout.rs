@@ -30,6 +30,7 @@ fn para(text: &str, size: f64) -> Block {
         space_before_pt: 0.0,
         space_after_pt: 0.0,
         hangul_word_wrap: None,
+        tab_stops: Vec::new(),
     })
 }
 
@@ -59,6 +60,7 @@ fn malgun_metrics(size: f64) -> (f64, f64) {
 fn single_paragraph_page_geometry_and_baseline() {
     let doc = Document {
         page: A4,
+        default_tab_interval_pt: None,
         blocks: vec![para("안녕하세요 Hello", 12.0)],
     };
     let result = rlayout::layout(&doc).expect("layout");
@@ -83,6 +85,7 @@ fn single_paragraph_page_geometry_and_baseline() {
 fn baselines_step_by_natural_line_height() {
     let doc = Document {
         page: A4,
+        default_tab_interval_pt: None,
         blocks: vec![
             para("첫째 문단", 12.0),
             para("둘째 문단", 12.0),
@@ -109,6 +112,7 @@ fn korean_wraps_by_word_by_default() {
     // 음절 단위면 ~478pt까지 채움 (2026-08-23 LO 실측 기반 판별값 460pt).
     let doc = Document {
         page: A4,
+        default_tab_interval_pt: None,
         blocks: vec![para(&"가나다라마바사 ".repeat(20).trim_end(), 12.0)],
     };
     let result = rlayout::layout(&doc).expect("layout");
@@ -137,6 +141,7 @@ fn korean_wraps_by_word_by_default() {
 fn long_document_paginates() {
     let doc = Document {
         page: A4,
+        default_tab_interval_pt: None,
         blocks: (0..60).map(|i| para(&format!("문단 {i}"), 24.0)).collect(),
     };
     let result = rlayout::layout(&doc).expect("layout");

@@ -28,6 +28,16 @@
 
 ### 2026-08-23
 
+- ✅ **탭 스톱 지원** — LO 기본 간격 1.25cm 실측·파라미터화
+  (default_tab_interval_pt, Word 36pt 불변), 명시 스톱(left/center/right)
+  파싱+상속, rlayout 런의 탭 분할. 엔진의 숨은 버그 2개 수정(포크 b97c03d):
+  자리표시 36pt가 해석 위치·행 폭을 오염(Word에선 36=36 상쇄로 은폐) +
+  center/right 스톱이 좌측 시맨틱으로 동작 → finalize 패스로 진짜 중앙/우측
+  정렬. 매트릭스 10/10 유지, space.odt는 tab 노트 해소로 잔여 원인(span
+  ×72)이 분리 측정됨(FAIL 0.68 — span 기능 대기열). 테스트 37개.
+- ✅ **업스트림 기여: tensorbee/rdocx PR #45** — 메인테이너가 이슈 #44에 PR
+  요청 → 포크의 두 커밋(caller 폰트 별칭)을 S52 이후 main에 리베이스·적응해
+  제출(브랜치 pr/fontfile-family). 업스트림 기반 테스트 231/0(+환경 이슈 3).
 - ✅ **와일드 FAIL 7건 전부 해소 — 33 PASS / 17 UNSUPPORTED / 0 FAIL / 0 CRASH**
   진단: 요소 히스토그램으로 7건 분류. 수정 3건: ① **문단 정렬**(fo:text-align
   파싱→rlayout Center/End/Justify — paste 문서 0.55의 정체) ② **빈 문단 보존**

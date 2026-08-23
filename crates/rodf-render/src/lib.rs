@@ -79,7 +79,14 @@ pub fn to_document(doc: &Document) -> (rlayout::Document, Vec<MappingLoss>) {
         .map(|paragraph| rlayout::Block::Paragraph(map_paragraph(paragraph)))
         .collect();
 
-    (rlayout::Document { page, blocks }, losses)
+    (
+        rlayout::Document {
+            page,
+            blocks,
+            default_tab_interval_pt: doc.default_tab_interval_pt(),
+        },
+        losses,
+    )
 }
 
 /// ODF 문서를 배치한다.
@@ -204,5 +211,18 @@ fn map_paragraph(paragraph: &rodf_core::Paragraph) -> rlayout::Paragraph {
         space_before_pt: 0.0,
         space_after_pt: 0.0,
         hangul_word_wrap: None, // 기본값(true) = LO/ODF 관례
+        tab_stops: style
+            .tab_stops
+            .iter()
+            .map(|t| rlayout::TabStop {
+                pos_pt: t.pos_pt,
+                align: match t.align {
+                    rodf_core::TabStopAlign::Center => rlayout::TabAlign::Center,
+                    rodf_core::TabStopAlign::Right => rlayout::TabAlign::Right,
+                    rodf_core::TabStopAlign::Left => rlayout::TabAlign::Left,
+                },
+                leader: None,
+            })
+            .collect(),
     }
 }

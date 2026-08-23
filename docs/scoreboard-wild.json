@@ -1,5 +1,5 @@
 {
-  "generated": "2026-08-23 11:29 UTC",
+  "generated": "2026-08-23 12:39 UTC",
   "threshold": 0.95,
   "results": [
     {
@@ -318,11 +318,10 @@
     {
       "doc": "space",
       "losses": 0,
-      "coverage": "tab x49",
-      "raw": 0.6708,
-      "blur2": 0.6787,
-      "png_blur2": 0.6839,
-      "status": "UNSUPPORTED"
+      "raw": 0.6725,
+      "blur2": 0.6795,
+      "png_blur2": 0.6852,
+      "status": "FAIL"
     },
     {
       "doc": "spellmenu-redline",
@@ -432,10 +431,10 @@
     {
       "doc": "ZoneMacroTest",
       "losses": 0,
-      "coverage": "forms x1, tab x2, table x1",
-      "raw": 0.7734,
-      "blur2": 0.7682,
-      "png_blur2": 0.7712,
+      "coverage": "forms x1, table x1",
+      "raw": 0.7926,
+      "blur2": 0.7751,
+      "png_blur2": 0.7781,
       "status": "UNSUPPORTED"
     }
   ]

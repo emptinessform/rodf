@@ -285,3 +285,83 @@ mod korean_word_wrap {
         }
     }
 }
+
+mod tab_stops {
+    use rodf_core::Document;
+
+    fn tabs() -> Document {
+        Document::open(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/fixtures/tabs.odt"
+        ))
+        .expect("tabs.odt should open")
+    }
+
+    /// 밴드(y0..y1)에서 글자 클러스터 시작 x 좌표들.
+    fn cluster_starts(png: &[u8], y0: usize, y1: usize) -> Vec<u32> {
+        let decoder = png::Decoder::new(std::io::Cursor::new(png));
+        let mut reader = decoder.read_info().unwrap();
+        let mut buf = vec![0u8; reader.output_buffer_size().unwrap()];
+        let info = reader.next_frame(&mut buf).unwrap();
+        let (w, h) = (info.width as usize, info.height as usize);
+        let bpp = info.buffer_size() / (w * h);
+        let mut col_ink = vec![false; w];
+        for y in y0..y1.min(h) {
+            for x in 0..w {
+                if buf[(y * w + x) * bpp] < 245 {
+                    col_ink[x] = true;
+                }
+            }
+        }
+        (1..w)
+            .filter(|&x| col_ink[x] && !col_ink[x - 1])
+            .map(|x| x as u32)
+            .collect()
+    }
+
+    /// 기본 탭 간격 = 1.25cm (LO 실측: 클러스터 시작 115/187/257/328 @144dpi).
+    #[test]
+    fn default_tab_interval_is_1_25cm() {
+        let rendered = rodf_render::render(&tabs()).expect("render");
+        let png = rendered.page_png(0, 144.0).expect("page 0");
+        let starts = cluster_starts(&png, 120, 142);
+        assert_eq!(starts.len(), 4, "{starts:?}");
+        let expected = [115u32, 187, 257, 328];
+        for (s, e) in starts.iter().zip(expected) {
+            assert!(
+                (*s as i64 - e as i64).abs() <= 3,
+                "cluster at {s}, expected ~{e}; all={starts:?}"
+            );
+        }
+    }
+
+    /// 명시적 center 탭 스톱(8cm): CENTER 텍스트의 중심 ≈ margin+8cm = 567px.
+    #[test]
+    fn explicit_center_tab_stop() {
+        let rendered = rodf_render::render(&tabs()).expect("render");
+        let png = rendered.page_png(0, 144.0).expect("page 0");
+        let starts = cluster_starts(&png, 152, 174);
+        assert!(starts.len() >= 2, "{starts:?}");
+        let decoder = png::Decoder::new(std::io::Cursor::new(&png[..]));
+        let mut reader = decoder.read_info().unwrap();
+        let mut buf = vec![0u8; reader.output_buffer_size().unwrap()];
+        let info = reader.next_frame(&mut buf).unwrap();
+        let (w, _h) = (info.width as usize, info.height as usize);
+        let bpp = buf.len() / (w * info.height as usize);
+        // CENTER 잉크의 좌우 극단 → 중심
+        let (mut lo, mut hi) = (w, 0usize);
+        for y in 152..174 {
+            for x in 200..w {
+                if buf[(y * w + x) * bpp] < 245 {
+                    lo = lo.min(x);
+                    hi = hi.max(x);
+                }
+            }
+        }
+        let center = (lo + hi) as f64 / 2.0;
+        assert!(
+            (center - 567.0).abs() <= 4.0,
+            "CENTER midpoint {center}, expected ~567 (margin+8cm)"
+        );
+    }
+}

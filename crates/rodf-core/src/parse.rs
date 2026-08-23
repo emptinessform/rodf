@@ -8,7 +8,7 @@ use std::collections::HashMap;
 use quick_xml::events::{BytesStart, Event};
 use quick_xml::Reader;
 
-use crate::styles::{Align, ContentStyles, PageGeometry, RawStyle, RawTextProps, StyleSheet};
+use crate::styles::{Align, ContentStyles, PageGeometry, RawStyle, RawTextProps, StyleSheet, TabStop, TabStopAlign};
 use crate::OdfError;
 
 /// content.xml 파싱 결과.
@@ -53,6 +53,16 @@ fn parse_align(value: &str) -> Option<Align> {
 
 fn read_para_align(e: &BytesStart) -> Option<Align> {
     attr_local(e, "text-align").and_then(|v| parse_align(&v))
+}
+
+fn read_tab_stop(e: &BytesStart) -> Option<TabStop> {
+    let pos_pt = attr_local(e, "position").and_then(|v| parse_length_pt(&v))?;
+    let align = match attr_local(e, "type").as_deref() {
+        Some("center") => TabStopAlign::Center,
+        Some("right") => TabStopAlign::Right,
+        _ => TabStopAlign::Left, // left / char(근사) / 미지정
+    };
+    Some(TabStop { pos_pt, align })
 }
 
 #[derive(Debug)]
@@ -136,7 +146,8 @@ fn read_text_props(e: &BytesStart) -> RawTextProps {
         font_size_asian_pt: attr_local(e, "font-size-asian").and_then(|v| parse_font_size(&v)),
         bold_asian: attr_local(e, "font-weight-asian").and_then(|v| parse_font_weight(&v)),
         italic_asian: attr_local(e, "font-style-asian").map(|v| v == "italic"),
-        align: None, // paragraph-properties에서 별도로 채워진다
+        align: None,     // paragraph-properties에서 별도로 채워진다
+        tab_stops: None, // tab-stops 컨테이너에서 별도로 채워진다
     }
 }
 
@@ -201,7 +212,22 @@ pub fn parse_styles_xml(xml: &str) -> Result<StyleSheet, OdfError> {
                             Scope::None => {}
                         }
                     }
+                    if matches!(scope, Scope::Default(_)) {
+                        if let Some(d) = attr_local(&e, "tab-stop-distance")
+                            .and_then(|v| parse_length_pt(&v))
+                        {
+                            if d > 0.0 {
+                                sheet.tab_stop_distance_pt = Some(d);
+                            }
+                        }
+                    }
                 }
+                // tab-stops 컨테이너 등장 = 상속 스톱 전체 대체 (ODF 규칙)
+                b"tab-stops" => match &mut scope {
+                    Scope::Named(_, style) => style.props.tab_stops = Some(Vec::new()),
+                    Scope::Default(p) => p.tab_stops = Some(Vec::new()),
+                    Scope::None => {}
+                },
                 _ => {}
             },
             Event::Empty(e) => match local_name(e.name().as_ref()) {
@@ -218,18 +244,34 @@ pub fn parse_styles_xml(xml: &str) -> Result<StyleSheet, OdfError> {
                         sheet.master_page_layout = attr_local(&e, "page-layout-name");
                     }
                 }
+                b"tab-stop" => {
+                    if let Some(stop) = read_tab_stop(&e) {
+                        let slot = match &mut scope {
+                            Scope::Named(_, style) => Some(&mut style.props.tab_stops),
+                            Scope::Default(p) => Some(&mut p.tab_stops),
+                            Scope::None => None,
+                        };
+                        if let Some(slot) = slot {
+                            slot.get_or_insert_with(Vec::new).push(stop);
+                        }
+                    }
+                }
                 b"text-properties" => {
                     let props = read_text_props(&e);
                     match &mut scope {
                         Scope::Named(_, style) => {
                             let align = style.props.align;
+                            let tabs = style.props.tab_stops.take();
                             style.props = props;
                             style.props.align = style.props.align.or(align);
+                            style.props.tab_stops = tabs;
                         }
                         Scope::Default(p) => {
                             let align = p.align;
+                            let tabs = p.tab_stops.take();
                             *p = props;
                             p.align = p.align.or(align);
+                            p.tab_stops = tabs;
                         }
                         Scope::None => {}
                     }
@@ -317,6 +359,11 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
                                 }
                             }
                         }
+                        b"tab-stops" => {
+                            if let Some((_, style)) = &mut current_style {
+                                style.props.tab_stops = Some(Vec::new());
+                            }
+                        }
                         b"style" if in_automatic => {
                             let family = attr_local(&e, "family");
                             if family.as_deref() == Some("paragraph")
@@ -359,9 +406,12 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
                 b"font-face" => read_font_face(&e, &mut content.automatic_styles.font_faces),
                 b"text-properties" => {
                     if let Some((_, style)) = &mut current_style {
+                        // 문단 속성(align/tab_stops)은 별도 요소에서 오므로 보존.
                         let align = style.props.align;
+                        let tabs = style.props.tab_stops.take();
                         style.props = read_text_props(&e);
                         style.props.align = style.props.align.or(align);
+                        style.props.tab_stops = tabs;
                     }
                 }
                 b"paragraph-properties" => {
@@ -383,8 +433,13 @@ pub fn parse_content_xml(xml: &str) -> Result<Content, OdfError> {
                     if let Some(p) = &mut para {
                         p.text.push('\t');
                     }
-                    // 탭 스톱은 아직 미해석 — 커버리지로 보고한다.
-                    *content.unsupported.entry("tab".to_string()).or_default() += 1;
+                }
+                b"tab-stop" => {
+                    if let Some(stop) = read_tab_stop(&e) {
+                        if let Some((_, style)) = &mut current_style {
+                            style.props.tab_stops.get_or_insert_with(Vec::new).push(stop);
+                        }
+                    }
                 }
                 b"line-break" => {
                     if let Some(p) = &mut para {
