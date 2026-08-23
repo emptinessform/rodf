@@ -58,6 +58,27 @@ headless LibreOffice로 렌더해 콘텐츠 크롭 SSIM을 계산합니다. hell
 > is line-height model differences (Word-style vs LibreOffice font-metric-proportional
 > spacing), which drives the roadmap below.
 
+## 핵심 방향: FSL / Key direction: FSL (Font Simulation Library)
+
+rodf가 시리즈에 가져가려는 대표 기능은 **폰트 시뮬레이션**입니다. 문서에 사용된
+폰트가 시스템에 없어도, 유사한 모양의 폰트를 **원본과 동일한 메트릭**으로 대체해
+줄바꿈과 쪽나눔이 흐트러지지 않게 유지합니다 — 한/글의 글꼴 대체 시뮬레이션이
+증명한 접근을, 사설 방식이 아닌 **국제 표준**(OpenType OS/2의 PANOSE-1,
+ISO/IEC 14496-22)으로, 그리고 rodf 전용이 아닌 **ODF·HWP/HWPX·DOC/DOCX 공용
+구조**로 구현하는 것이 목표입니다. 세 포맷 모두 폰트 기술자(ODF
+`svg:panose-1`, DOCX `fontTable.xml`, HWP FaceName 레코드)를 이미 싣고 다니므로,
+공통 매칭·메트릭 시뮬레이션 계층을 시리즈가 공유할 수 있습니다.
+
+> The flagship capability rodf brings to the series is **font simulation**: when a
+> document's font is missing on the system, substitute a similar-looking font at the
+> **original font's metrics**, so line breaks and pagination never shift — the approach
+> proven by Hancom Office's font substitution, rebuilt on **international standards**
+> (PANOSE-1 in the OpenType OS/2 table, ISO/IEC 14496-22) and shared across
+> **ODF, HWP/HWPX, and DOC/DOCX** rather than tied to one format. All three formats
+> already carry font descriptors (ODF `svg:panose-1`, DOCX `fontTable.xml`, HWP
+> FaceName records), so one matching + metric-simulation layer can serve the whole
+> family.
+
 ## 크레이트 / Crates
 
 | Crate | 역할 / Role |
