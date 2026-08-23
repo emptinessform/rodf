@@ -60,18 +60,18 @@ hhea lineGap(행 위 배치)까지 LibreOffice와 정렬된 상태입니다.
 > size/weight, A4 page geometry, and hhea lineGap (seated above the line) all align
 > with LibreOffice.
 
-## 핵심 방향: FSL / Key direction: FSL (Font Simulation Library)
+## 핵심 방향: MCFS / Key direction: MCFS (Metric-Compatible Font Substitution)
 
-rodf가 시리즈에 가져가려는 대표 기능은 **폰트 시뮬레이션**입니다. 문서에 사용된
+rodf가 시리즈에 가져가려는 대표 기능은 **MCFS — 메트릭 호환 글꼴 대체**입니다. 문서에 사용된
 폰트가 시스템에 없어도, 유사한 모양의 폰트를 **원본과 동일한 메트릭**으로 대체해
-줄바꿈과 쪽나눔이 흐트러지지 않게 유지합니다 — 한/글의 글꼴 대체 시뮬레이션이
+줄바꿈과 쪽나눔이 흐트러지지 않게 유지합니다 — 한/글의 글꼴 대체 시뮬레이션(FSL)이
 증명한 접근을, 사설 방식이 아닌 **국제 표준**(OpenType OS/2의 PANOSE-1,
 ISO/IEC 14496-22)으로, 그리고 rodf 전용이 아닌 **ODF·HWP/HWPX·DOC/DOCX 공용
 구조**로 구현하는 것이 목표입니다. 세 포맷 모두 폰트 기술자(ODF
 `svg:panose-1`, DOCX `fontTable.xml`, HWP FaceName 레코드)를 이미 싣고 다니므로,
 공통 매칭·메트릭 시뮬레이션 계층을 시리즈가 공유할 수 있습니다.
 
-> The flagship capability rodf brings to the series is **font simulation**: when a
+> The flagship capability rodf brings to the series is **MCFS — metric-compatible font substitution**: when a
 > document's font is missing on the system, substitute a similar-looking font at the
 > **original font's metrics**, so line breaks and pagination never shift — the approach
 > proven by Hancom Office's font substitution, rebuilt on **international standards**
@@ -81,25 +81,25 @@ ISO/IEC 14496-22)으로, 그리고 rodf 전용이 아닌 **ODF·HWP/HWPX·DOC/DO
 > FaceName records), so one matching + metric-simulation layer can serve the whole
 > family.
 
-FSL이 폰트 저작권·EULA·상표와 어떤 관계에 있는지는
-[docs/fsl-licensing.md](docs/fsl-licensing.md)에 정리되어 있습니다 — 요지: 파일과
+MCFS가 폰트 저작권·EULA·상표와 어떤 관계에 있는지는
+[docs/mcfs-licensing.md](docs/mcfs-licensing.md)에 정리되어 있습니다 — 요지: 파일과
 외형은 건드리지 않고 숫자 메트릭만 다루므로 저작권·디자인권 문제가 구조적으로
 없으며, 잔여 리스크(EULA·이름)는 렌더 기반 측정과 개명 관행으로 완화합니다.
 
-> How FSL relates to font copyright, EULAs, and trademarks is covered in
-> [docs/fsl-licensing.md](docs/fsl-licensing.md) — in short: only numeric metrics
+> How MCFS relates to font copyright, EULAs, and trademarks is covered in
+> [docs/mcfs-licensing.md](docs/mcfs-licensing.md) — in short: only numeric metrics
 > are used (never files or outlines), so copyright/design-right issues are
 > structurally absent; residual risks (EULAs, naming) are mitigated by
 > render-based measurement and renaming conventions.
 
 관련 선행 오픈소스: [PolarisOffice/polaris_mcfg](https://github.com/PolarisOffice/polaris_mcfg)
 (MIT) — 원본 폰트의 숫자 메트릭을 자유 라이선스 폰트에 입혀 대체 폰트를 *생성*하는
-도구. mcfg가 오프라인 생성이라면 rodf의 FSL은 런타임 시뮬레이션으로 상호보완이며,
+도구. mcfg가 오프라인 생성이라면 rodf의 MCFS는 런타임 대체로 상호보완이며,
 mcfg의 메트릭 JSON 스펙을 데이터 포맷으로 활용하는 것을 검토 중입니다.
 
 > Related prior art: [PolarisOffice/polaris_mcfg](https://github.com/PolarisOffice/polaris_mcfg)
 > (MIT) *generates* metric-compatible substitute fonts offline by applying a source
-> font's numeric metrics to a freely-licensed design. rodf's FSL is the runtime
+> font's numeric metrics to a freely-licensed design. rodf's MCFS is the runtime
 > counterpart, and adopting mcfg's metric JSON spec as our data format is under
 > consideration.
 
