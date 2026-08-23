@@ -79,6 +79,17 @@ ISO/IEC 14496-22)으로, 그리고 rodf 전용이 아닌 **ODF·HWP/HWPX·DOC/DO
 > FaceName records), so one matching + metric-simulation layer can serve the whole
 > family.
 
+관련 선행 오픈소스: [PolarisOffice/polaris_mcfg](https://github.com/PolarisOffice/polaris_mcfg)
+(MIT) — 원본 폰트의 숫자 메트릭을 자유 라이선스 폰트에 입혀 대체 폰트를 *생성*하는
+도구. mcfg가 오프라인 생성이라면 rodf의 FSL은 런타임 시뮬레이션으로 상호보완이며,
+mcfg의 메트릭 JSON 스펙을 데이터 포맷으로 활용하는 것을 검토 중입니다.
+
+> Related prior art: [PolarisOffice/polaris_mcfg](https://github.com/PolarisOffice/polaris_mcfg)
+> (MIT) *generates* metric-compatible substitute fonts offline by applying a source
+> font's numeric metrics to a freely-licensed design. rodf's FSL is the runtime
+> counterpart, and adopting mcfg's metric JSON spec as our data format is under
+> consideration.
+
 ## 크레이트 / Crates
 
 | Crate | 역할 / Role |
