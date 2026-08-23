@@ -18,9 +18,12 @@ rodf-render = { path = "crates/rodf-render" }
 zip = { version = "8.1", default-features = false, features = ["deflate"] }
 quick-xml = "0.41"
 thiserror = "2"
-# rdocx 레이아웃 엔진 (경로 α 어댑터가 사용; M0 스파이크로 검증된 로컬 포크)
-rdocx-layout = { path = "../SBDoc/rdocx-fork/crates/rdocx-layout" }
-rdocx-oxml = { path = "../SBDoc/rdocx-fork/crates/rdocx-oxml" }
-oxml-layout = { path = "../SBDoc/rdocx-fork/crates/oxml-layout" }
-oxml-pdf = { path = "../SBDoc/rdocx-fork/crates/oxml-pdf" }
-oxml-drawing = { path = "../SBDoc/rdocx-fork/crates/oxml-drawing" }
+# rdocx 레이아웃 엔진 (경로 α 어댑터가 사용).
+# "font-natural" line rule(4ab9020)이 필요해 emptinessform 포크에 rev 고정.
+# 로컬에서 포크를 고치며 작업할 때는 임시로 path 의존으로 바꿔 쓸 것:
+#   { path = "../SBDoc/rdocx-fork/crates/<crate>" }
+rdocx-layout = { git = "https://github.com/emptinessform/rdocx", rev = "7575436a5a2cab70beec95d3b57c6533902e4109" }
+rdocx-oxml = { git = "https://github.com/emptinessform/rdocx", rev = "7575436a5a2cab70beec95d3b57c6533902e4109" }
+oxml-layout = { git = "https://github.com/emptinessform/rdocx", rev = "7575436a5a2cab70beec95d3b57c6533902e4109" }
+oxml-pdf = { git = "https://github.com/emptinessform/rdocx", rev = "7575436a5a2cab70beec95d3b57c6533902e4109" }
+oxml-drawing = { git = "https://github.com/emptinessform/rdocx", rev = "7575436a5a2cab70beec95d3b57c6533902e4109" }
