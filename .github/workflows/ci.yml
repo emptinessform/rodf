@@ -1,0 +1,25 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build workspace
+        run: cargo build --workspace
+      # rodf-core 테스트는 폰트/렌더링에 의존하지 않는다 (파서·스타일 해석만).
+      - name: Core tests (font-free)
+        run: cargo test -p rodf-core
+      # rodf-render/rodf-cli 테스트는 한국어 시스템 폰트(맑은 고딕, 굴림)를
+      # 요구한다. GitHub Windows 러너의 폰트 구성이 보장되지 않아 로컬/셀프
+      # 호스티드에서 실행한다. LibreOffice 오라클 CI는 M1.5 Docker 고정 과제.
+      - name: Render tests (best effort — Korean fonts may be absent)
+        run: cargo test -p rodf-render -p rodf-cli
+        continue-on-error: true

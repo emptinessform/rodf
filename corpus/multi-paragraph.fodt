@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+ xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"
+ xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
+ xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"
+ xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0"
+ office:version="1.3" office:mimetype="application/vnd.oasis.opendocument.text">
+  <office:font-face-decls>
+    <style:font-face style:name="맑은 고딕" svg:font-family="'맑은 고딕'"/>
+    <style:font-face style:name="굴림" svg:font-family="'굴림'"/>
+    <style:font-face style:name="바탕" svg:font-family="'바탕'"/>
+  </office:font-face-decls>
+  <office:automatic-styles>
+    <style:style style:name="H" style:family="paragraph">
+      <style:text-properties style:font-name="맑은 고딕" style:font-name-asian="맑은 고딕" fo:font-size="18pt" style:font-size-asian="18pt" fo:font-weight="bold" style:font-weight-asian="bold"/>
+    </style:style>
+    <style:style style:name="B" style:family="paragraph">
+      <style:text-properties style:font-name="맑은 고딕" style:font-name-asian="맑은 고딕" fo:font-size="11pt" style:font-size-asian="11pt"/>
+    </style:style>
+  </office:automatic-styles>
+  <office:body><office:text>
+    <text:p text:style-name="H">제목 문단 Heading</text:p>
+    <text:p text:style-name="B">문서 포맷의 렌더링 충실도는 결국 디테일의 총합이다. 줄바꿈 위치 하나, 자간 한 픽셀, 행간의 미세한 차이가 쌓여 전체 인상을 결정한다. rodf는 이 디테일을 LibreOffice 오라클과의 픽셀 비교로 검증한다.</text:p>
+    <text:p text:style-name="B">OpenDocument Format은 ISO/IEC 26300 국제 표준이며, content.xml과 styles.xml의 automatic style 체인을 해석해야 한다. Korean typography는 first-class requirement이고, 줄바꿈은 한글과 Latin이 섞일 때 가장 어렵다.</text:p>
+    <text:p text:style-name="B">마지막 문단 The end.</text:p>
+  </office:text></office:body>
+</office:document>
