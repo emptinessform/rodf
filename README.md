@@ -81,6 +81,17 @@ ISO/IEC 14496-22)으로, 그리고 rodf 전용이 아닌 **ODF·HWP/HWPX·DOC/DO
 > FaceName records), so one matching + metric-simulation layer can serve the whole
 > family.
 
+FSL이 폰트 저작권·EULA·상표와 어떤 관계에 있는지는
+[docs/fsl-licensing.md](docs/fsl-licensing.md)에 정리되어 있습니다 — 요지: 파일과
+외형은 건드리지 않고 숫자 메트릭만 다루므로 저작권·디자인권 문제가 구조적으로
+없으며, 잔여 리스크(EULA·이름)는 렌더 기반 측정과 개명 관행으로 완화합니다.
+
+> How FSL relates to font copyright, EULAs, and trademarks is covered in
+> [docs/fsl-licensing.md](docs/fsl-licensing.md) — in short: only numeric metrics
+> are used (never files or outlines), so copyright/design-right issues are
+> structurally absent; residual risks (EULAs, naming) are mitigated by
+> render-based measurement and renaming conventions.
+
 관련 선행 오픈소스: [PolarisOffice/polaris_mcfg](https://github.com/PolarisOffice/polaris_mcfg)
 (MIT) — 원본 폰트의 숫자 메트릭을 자유 라이선스 폰트에 입혀 대체 폰트를 *생성*하는
 도구. mcfg가 오프라인 생성이라면 rodf의 FSL은 런타임 시뮬레이션으로 상호보완이며,
