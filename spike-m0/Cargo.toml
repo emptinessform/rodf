@@ -1,0 +1,16 @@
+[package]
+name = "spike-m0"
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+# rodf M0 스파이크 — rdocx 레이아웃 엔진의 포맷 결합도 실측.
+# 로컬 rdocx-fork 워크스페이스를 path 의존으로 사용한다.
+[dependencies]
+rdocx-layout = { path = "../../SBDoc/rdocx-fork/crates/rdocx-layout" }
+rdocx-oxml = { path = "../../SBDoc/rdocx-fork/crates/rdocx-oxml" }
+oxml-layout = { path = "../../SBDoc/rdocx-fork/crates/oxml-layout" }
+oxml-pdf = { path = "../../SBDoc/rdocx-fork/crates/oxml-pdf" }
+oxml-drawing = { path = "../../SBDoc/rdocx-fork/crates/oxml-drawing" }
+
+[workspace]

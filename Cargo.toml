@@ -1,0 +1,26 @@
+[workspace]
+resolver = "3"
+members = [
+    "crates/rodf-core",
+    "crates/rodf-render",
+    "crates/rodf-cli",
+]
+exclude = ["spike-m0"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+[workspace.dependencies]
+rodf-core = { path = "crates/rodf-core" }
+rodf-render = { path = "crates/rodf-render" }
+zip = { version = "8.1", default-features = false, features = ["deflate"] }
+quick-xml = "0.41"
+thiserror = "2"
+# rdocx 레이아웃 엔진 (경로 α 어댑터가 사용; M0 스파이크로 검증된 로컬 포크)
+rdocx-layout = { path = "../SBDoc/rdocx-fork/crates/rdocx-layout" }
+rdocx-oxml = { path = "../SBDoc/rdocx-fork/crates/rdocx-oxml" }
+oxml-layout = { path = "../SBDoc/rdocx-fork/crates/oxml-layout" }
+oxml-pdf = { path = "../SBDoc/rdocx-fork/crates/oxml-pdf" }
+oxml-drawing = { path = "../SBDoc/rdocx-fork/crates/oxml-drawing" }
