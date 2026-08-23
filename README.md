@@ -125,6 +125,14 @@ mcfg의 메트릭 JSON 스펙을 데이터 포맷으로 활용하는 것을 검�
 - **M3+** — 표, 이미지, 머리글/바닥글, SVG 백엔드, ODS/ODP, WASM/npm
   / tables, images, headers/footers, SVG backend, ODS/ODP, WASM/npm
 
+## 설계 문서 / Design doc
+
+설계·아키텍처·결정 대장(D1~D12)·세션 기록은 [docs/DESIGN.md](docs/DESIGN.md)에서
+관리합니다 — 이 프로젝트의 "왜"가 담긴 정본입니다.
+
+> Design, architecture, the decision ledger (D1–D12), and session records live in
+> [docs/DESIGN.md](docs/DESIGN.md) — the canonical record of this project's "why".
+
 ## 개발 / Development
 
 ```sh
