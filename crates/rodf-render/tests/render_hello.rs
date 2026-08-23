@@ -105,6 +105,75 @@ fn paragraphs_get_odf_spacing_defaults_not_word_defaults() {
         assert_eq!(ppr.space_before, Some(Twips(0)));
         assert_eq!(ppr.space_after, Some(Twips(0)));
         assert_eq!(ppr.line_spacing, Some(Twips(240)));
-        assert_eq!(ppr.line_rule.as_deref(), Some("auto"));
+        assert_eq!(ppr.line_rule.as_deref(), Some("font-natural"));
+    }
+}
+
+mod line_gap {
+    use rodf_core::Document;
+
+    fn gulim() -> Document {
+        Document::open(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/tests/fixtures/gulim.odt"
+        ))
+        .expect("gulim.odt should open")
+    }
+
+    /// PNG 회색조 근사로 잉크 밴드(y0,y1)를 추출한다.
+    fn ink_bands(png: &[u8]) -> Vec<(u32, u32)> {
+        let decoder = png::Decoder::new(std::io::Cursor::new(png));
+        let mut reader = decoder.read_info().unwrap();
+        let mut buf = vec![0u8; reader.output_buffer_size().unwrap()];
+        let info = reader.next_frame(&mut buf).unwrap();
+        let (w, h) = (info.width as usize, info.height as usize);
+        let bpp = info.buffer_size() / (w * h);
+        let mut bands = Vec::new();
+        let mut in_band = false;
+        let mut start = 0u32;
+        for y in 0..h {
+            let row_has_ink = (0..w).any(|x| buf[(y * w + x) * bpp] < 245);
+            if row_has_ink && !in_band {
+                start = y as u32;
+                in_band = true;
+            } else if !row_has_ink && in_band {
+                bands.push((start, y as u32));
+                in_band = false;
+            }
+        }
+        bands
+    }
+
+    /// 굴림(hhea lineGap=152/1024)의 행 높이는 gap 포함 1.1484em이어야 한다.
+    /// LO 실측: 24pt에서 주기 55px, 첫 잉크 y=125 (gap이 행 위에 배치됨).
+    #[test]
+    fn gulim_line_period_includes_line_gap() {
+        let rendered = rodf_render::render(&gulim()).expect("render should succeed");
+        let png = rendered.page_png(0, 144.0).expect("page 0");
+        let bands = ink_bands(&png);
+        assert_eq!(bands.len(), 4, "four paragraphs expected: {bands:?}");
+        let periods: Vec<i64> = bands
+            .windows(2)
+            .map(|w| w[1].0 as i64 - w[0].0 as i64)
+            .collect();
+        for p in &periods {
+            assert!(
+                (54..=56).contains(p),
+                "period {p} should be ~55px (1.1484em incl lineGap); all={periods:?}"
+            );
+        }
+    }
+
+    /// LO는 lineGap을 행 위에 배치한다 — 첫 잉크가 그만큼 내려와야 한다.
+    #[test]
+    fn gulim_line_gap_sits_above_the_line() {
+        let rendered = rodf_render::render(&gulim()).expect("render should succeed");
+        let png = rendered.page_png(0, 144.0).expect("page 0");
+        let bands = ink_bands(&png);
+        let first_ink = bands[0].0;
+        assert!(
+            (123..=128).contains(&first_ink),
+            "first ink y {first_ink} should be ~125 (margin + gap + ascent - glyph extent)"
+        );
     }
 }

@@ -13,3 +13,6 @@ rdocx-oxml.workspace = true
 oxml-layout.workspace = true
 oxml-pdf.workspace = true
 oxml-drawing.workspace = true
+
+[dev-dependencies]
+png = "0.18"

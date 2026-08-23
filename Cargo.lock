@@ -496,6 +496,7 @@ dependencies = [
  "oxml-drawing",
  "oxml-layout",
  "oxml-pdf",
+ "png",
  "rdocx-layout",
  "rdocx-oxml",
  "rodf-core",

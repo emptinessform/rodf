@@ -177,14 +177,17 @@ fn map_paragraph(paragraph: &rodf_core::Paragraph, losses: &mut Vec<MappingLoss>
     let mut p = CT_P::new();
     let style = paragraph.style();
 
-    // ODF/LO 기본은 문단 간격 0·단일 행간 — Word Normal 기본값(1.08 행간,
-    // after-spacing)이 새어들지 않도록 명시적으로 고정한다.
+    // ODF/LO 기본은 문단 간격 0에 폰트 자연 행간(hhea asc+desc+lineGap,
+    // gap은 행 위에 배치). "font-natural"은 엔진의 Word 행간 에뮬레이션을
+    // 끄는 sentinel — Word Normal 기본값(1.08 행간, after-spacing)도 함께
+    // 차단한다. line_spacing 값은 Normal 스타일의 259twips를 덮기 위한
+    // 자리채움이며 font-natural 규칙에서는 무시된다.
     {
         let ppr = p.properties.get_or_insert_with(Default::default);
         ppr.space_before = Some(Twips(0));
         ppr.space_after = Some(Twips(0));
         ppr.line_spacing = Some(Twips(240));
-        ppr.line_rule = Some("auto".to_string());
+        ppr.line_rule = Some("font-natural".to_string());
     }
 
     for (script, segment) in split_script_runs(paragraph.text()) {
