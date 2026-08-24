@@ -4,6 +4,12 @@
 > "무엇을 하려 했나 → 무엇을 했나 → 무엇을 배웠나 → 결과"를 풀어 쓴다.
 > 실행 추적(대기열·완료 대장)은 [PROGRESS.md](PROGRESS.md),
 > 설계 결정의 근거는 [DESIGN.md](DESIGN.md) 참조.
+>
+> 같은 내용의 조판본(웹 페이지)은 [milestones.html](milestones.html)로
+> 저장소에서 관리하며, 발행본은
+> <https://claude.ai/code/artifact/8d7e06fd-d589-4527-8ed3-199dc50e9dd9>
+> (비공개, share 메뉴로 공유 가능). 단계가 갱신되면 이 문서와 html을 함께
+> 고치고 같은 URL로 재발행한다.
 
 ## 프로젝트가 무엇인가
 
